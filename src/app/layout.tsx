@@ -1,5 +1,5 @@
 import "./globals.css";
-import Providers from "../components/providers"; // Client wrapper
+import Providers from "../components/providers";
 
 export const metadata = {
   title: "My App",

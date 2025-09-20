@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import axiosInstance from "@/lib/axios"; // your axios instance
 import { useRouter } from "next/navigation";
+import { showErrorToast, showSuccessToast } from "@/utils/toastUtil";
 
 export default function LoginComponent() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -35,8 +36,10 @@ export default function LoginComponent() {
 
       // Redirect to home page or dashboard
       router.push("/");
+      showSuccessToast("Login successful!");
     } catch (err: any) {
       console.error(err);
+      showErrorToast(err.response?.data?.message || "Something went wrong");
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {

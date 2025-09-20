@@ -291,7 +291,7 @@ export default function RegisterComponent() {
           <p className="mt-2 text-center text-sm text-black/60">
             Already have an account?{" "}
             <a
-              href="#"
+              href="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               Sign in
