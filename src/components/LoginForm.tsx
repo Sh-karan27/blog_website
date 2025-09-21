@@ -116,7 +116,11 @@ export default function LoginComponent() {
                 disabled={loading}
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 disabled:opacity-50"
               >
-                {loading ? "Logging in..." : "Log In"}
+                {loading ? (
+                  <span className="loading loading-dots loading-sm"></span>
+                ) : (
+                  "Log In"
+                )}
               </button>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import LoadingScreen from "@/utils/LoadingScreen";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -24,7 +25,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // While checking token
   if (authorized === null) {
-    return <p>Loading...</p>;
+    return <LoadingScreen />;
   }
 
   // Redirecting? You can also return null here
