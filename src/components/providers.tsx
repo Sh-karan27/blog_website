@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import { usePathname } from "next/navigation";
 import ProtectedRoute from "@/lib/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
+import Footer from "./Footer";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -32,6 +33,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       />
       {!hideNavbar && <Navbar />}
       {isProtected ? <ProtectedRoute>{children}</ProtectedRoute> : children}
+      {!hideNavbar && <Footer />}
     </Provider>
   );
 }

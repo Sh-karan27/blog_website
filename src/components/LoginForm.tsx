@@ -31,6 +31,7 @@ export default function LoginComponent() {
       // Save tokens in localStorage
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("profileImage", user?.profileImage?.url);
 
       console.log("Login successful", user);
 
