@@ -1,12 +1,18 @@
 "use client";
 import axiosInstance from "@/lib/axios";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const Navbar = () => {
   const router = useRouter();
-  const profileImage =
-    typeof window !== "undefined" ? localStorage.getItem("profileImage") : null;
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const storedImage = localStorage.getItem("profileImage");
+    if (storedImage) setProfileImage(storedImage);
+  }, []);
 
   const logoutUser = async () => {
     try {
@@ -19,6 +25,9 @@ const Navbar = () => {
       console.log(error);
     }
   };
+
+  // Avoid rendering anything until client-side is ready
+  if (!mounted) return null;
 
   return (
     <div className="navbar bg-base-100 shadow-sm border-b border-base-200">
