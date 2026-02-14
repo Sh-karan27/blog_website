@@ -1,4 +1,5 @@
 import axiosInstance from "@/lib/axios";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 const HomeContent = () => {
@@ -9,7 +10,7 @@ const HomeContent = () => {
     page: number = 1,
     query: string = "",
     sortBy?: string,
-    sortType?: "asc" | "desc"
+    sortType?: "asc" | "desc",
   ) => {
     try {
       const params: any = { page, limit: 10 };
@@ -78,35 +79,41 @@ const HomeContent = () => {
               blogs.map((post, i) => (
                 <article
                   key={post._id || i}
-                  className="flex flex-col items-start justify-between"
+                  className="flex flex-col items-start justify-between h-full"
                 >
-                  <div className="relative w-full">
-                    <div
-                      className="aspect-[16/9] w-full rounded-lg bg-cover bg-center sm:aspect-[2/1] lg:aspect-[3/2]"
-                      style={{
-                        backgroundImage: `url("${post.coverImage?.url || ""}")`,
-                      }}
-                    ></div>
-                    <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10 dark:ring-white/10"></div>
-                  </div>
+                  <Link
+                    href={`/blog/${post._id}`}
+                    className=" w-full h-full hover:shadow-md transition-all flex flex-col group"
+                  >
+                    <div className="relative w-full flex-shrink-0">
+                      <div
+                        className="aspect-[16/9] w-full rounded-lg bg-cover bg-center sm:aspect-[2/1] lg:aspect-[3/2]"
+                        style={{
+                          backgroundImage: `url("${post.coverImage?.url || ""}")`,
+                        }}
+                      ></div>
+                      <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10 dark:ring-white/10"></div>
+                    </div>
 
-                  <div className="max-w-xl">
-                    <div className="group relative mt-4">
-                      <h3 className="text-lg font-semibold leading-6 text-black">
-                        <a href="#">
-                          <span className="absolute inset-0 line-clamp-1"></span>
+                    <div className="max-w-xl flex-1 flex flex-col justify-between py-4">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold leading-6 text-black group-hover:text-gray-600 transition-colors line-clamp-1">
                           {post.title}
-                        </a>
-                      </h3>
-                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                        {post.description}
-                      </p>
-                      <p className="mt-2 text-xs text-gray-500">
+                        </h3>
+
+                        {/* ✅ Fixed height + truncation */}
+                        <p className="line-clamp-3 text-sm leading-6 text-gray-600 dark:text-gray-400 min-h-[3.75rem]">
+                          {post.description}
+                        </p>
+                      </div>
+
+                      {/* ✅ Pushed to bottom */}
+                      <p className="mt-auto text-xs text-gray-500 pt-2">
                         by {post.authorDetails?.username} • {post.likeCount}{" "}
                         Likes • {post.commentCount} Comments
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 </article>
               ))
             ) : (
