@@ -4,9 +4,6 @@ import axiosInstance from "@/lib/axios";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useRef } from "react";
-import { Camera, Save, X, Eye, EyeOff, Lock, User } from "lucide-react";
-import { toast } from "react-toastify";
 
 interface Blog {
   _id: string;
@@ -25,18 +22,6 @@ interface Blog {
 interface ProfileStats {
   followers: string;
   following: number;
-}
-interface UserChannel {
-  _id: string;
-  username: string;
-  email: string;
-  bio: string;
-  profileImage: { url: string };
-  coverImage: { url: string };
-  followerCount: number;
-  followingToCount: number;
-  isFollowing: boolean;
-  createdAt: string;
 }
 
 // ── Static data ────────────────────────────────────────────────
@@ -126,26 +111,7 @@ const formatDate = (d: string) =>
 const CuratorProfile = () => {
   const { profileId } = useParams() as { profileId: string };
   const router = useRouter();
-  const [userChannel, setUserChannel] = useState<UserChannel | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const isOwner = currentUserId === profileId;
 
-  const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
-  const [savingDetails, setSavingDetails] = useState(false);
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showOld, setShowOld] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [uploadingProfile, setUploadingProfile] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
-  const profileImageRef = useRef<HTMLInputElement>(null);
-  const coverImageRef = useRef<HTMLInputElement>(null);
   const [recentPosts, setRecentPosts] = useState<Blog[]>([]);
   const [mostLiked, setMostLiked] = useState<Blog[]>([]);
   const [mostViewed, setMostViewed] = useState<Blog[]>([]);
@@ -154,46 +120,12 @@ const CuratorProfile = () => {
   useEffect(() => {
     if (!profileId) return;
 
-    const fetchProfile = async () => {
-      try {
-        setLoadingProfile(true);
-        const meRes = await axiosInstance.get("/users/current-user");
-        const me = meRes.data?.data;
-        setCurrentUserId(me?._id);
-
-        const blogsRes = await axiosInstance.get(`/blog/u/${profileId}`, {
-          params: { page: 1, limit: 1 },
-        });
-        const blogsData = blogsRes.data?.data;
-        const firstBlog = Array.isArray(blogsData)
-          ? blogsData[0]
-          : blogsData?.blogs?.[0];
-        const uname = firstBlog?.author?.username;
-
-        if (uname) {
-          const channelRes = await axiosInstance.get(`/users/c/${uname}`);
-          const channelData = channelRes.data?.data;
-          const channel = Array.isArray(channelData)
-            ? channelData[0]
-            : channelData;
-          setUserChannel(channel);
-          if (me?._id === profileId) {
-            setUsername(channel?.username ?? "");
-            setEmail(channel?.email ?? "");
-            setBio(channel?.bio ?? "");
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch profile:", err);
-      } finally {
-        setLoadingProfile(false);
-      }
-    };
-
     const fetchAll = async () => {
       try {
         setLoadingPosts(true);
+
         const [recentRes, likedRes, viewedRes] = await Promise.all([
+          // 1 featured + 4 sidebar = 5 recent
           axiosInstance.get(`/blog/u/${profileId}`, {
             params: {
               page: 1,
@@ -202,6 +134,7 @@ const CuratorProfile = () => {
               sortType: "desc",
             },
           }),
+          // top 3 by likes
           axiosInstance.get(`/blog/u/${profileId}`, {
             params: {
               page: 1,
@@ -210,14 +143,22 @@ const CuratorProfile = () => {
               sortType: "desc",
             },
           }),
+          // top 3 by views
           axiosInstance.get(`/blog/u/${profileId}`, {
-            params: { page: 1, limit: 3, sortBy: "views", sortType: "desc" },
+            params: {
+              page: 1,
+              limit: 3,
+              sortBy: "viewCount",
+              sortType: "desc",
+            },
           }),
         ]);
+
         const extract = (res: any): Blog[] => {
           const data = res.data?.data;
           return Array.isArray(data) ? data : (data?.blogs ?? []);
         };
+
         setRecentPosts(extract(recentRes));
         setMostLiked(extract(likedRes));
         setMostViewed(extract(viewedRes));
@@ -228,181 +169,30 @@ const CuratorProfile = () => {
       }
     };
 
-    fetchProfile();
     fetchAll();
   }, [profileId]);
-
-  const handleSaveDetails = async () => {
-    if (!username && !email && !bio)
-      return toast.error("At least one field required");
-    try {
-      setSavingDetails(true);
-      const res = await axiosInstance.patch("/users/update-account", {
-        username,
-        email,
-        bio,
-      });
-      setUserChannel((prev) => (prev ? { ...prev, ...res.data.data } : prev));
-      toast.success("Profile updated");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Failed to update");
-    } finally {
-      setSavingDetails(false);
-    }
-  };
-
-  const handleChangePassword = async () => {
-    if (!oldPassword || !newPassword || !confirmPassword)
-      return toast.error("All fields required");
-    if (newPassword !== confirmPassword)
-      return toast.error("Passwords do not match");
-    if (newPassword.length < 6) return toast.error("Min 6 characters");
-    try {
-      setSavingPassword(true);
-      await axiosInstance.post("/users/change-password", {
-        oldPassword,
-        newPassword,
-      });
-      toast.success("Password changed");
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Failed");
-    } finally {
-      setSavingPassword(false);
-    }
-  };
-
-  const handleProfileImageChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("profileImage", file);
-    try {
-      setUploadingProfile(true);
-      const res = await axiosInstance.patch("/users/profile-image", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const url = res.data.data.profileImage.url;
-      setUserChannel((prev) =>
-        prev ? { ...prev, profileImage: { url } } : prev,
-      );
-      localStorage.setItem("profileImage", url);
-      toast.success("Profile image updated");
-    } catch {
-      toast.error("Failed to upload image");
-    } finally {
-      setUploadingProfile(false);
-    }
-  };
-
-  const handleCoverImageChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("coverImage", file);
-    try {
-      setUploadingCover(true);
-      const res = await axiosInstance.patch("/users/cover-image", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setUserChannel((prev) =>
-        prev ? { ...prev, coverImage: res.data.data.coverImage } : prev,
-      );
-      toast.success("Cover image updated");
-    } catch {
-      toast.error("Failed to upload cover");
-    } finally {
-      setUploadingCover(false);
-    }
-  };
 
   return (
     <div className="bg-[#f6faff] min-h-screen font-sans text-[#171c20]">
       <main className="pt-24 pb-20">
         {/* ── Hero / Profile ── */}
-        {/* ── Hero / Profile ── */}
         <section className="max-w-screen-2xl mx-auto px-4 sm:px-8 mb-16 sm:mb-24">
-          {/* Cover image — only visible strip, owner can edit */}
-          {(userChannel?.coverImage?.url || isOwner) && (
-            <div className="relative w-full h-40 sm:h-52 rounded-2xl overflow-hidden mb-10 bg-gradient-to-br from-[#c9e6ff] to-[#006591]/20 group">
-              {userChannel?.coverImage?.url && (
-                <img
-                  src={userChannel.coverImage.url}
-                  alt="cover"
-                  className="w-full h-full object-cover"
-                />
-              )}
-              {isOwner && (
-                <>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
-                  <button
-                    onClick={() => coverImageRef.current?.click()}
-                    disabled={uploadingCover}
-                    className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white text-xs font-medium rounded-lg transition-all backdrop-blur-sm"
-                  >
-                    {uploadingCover ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Camera className="w-3.5 h-3.5" />
-                    )}
-                    {uploadingCover ? "Uploading..." : "Change Cover"}
-                  </button>
-                  <input
-                    ref={coverImageRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleCoverImageChange}
-                  />
-                </>
-              )}
-            </div>
-          )}
-
           <div className="flex flex-col md:flex-row gap-10 lg:gap-16 items-start">
-            {/* Avatar — keep original size/style, just add edit overlay for owner */}
+            {/* Avatar */}
             <div className="relative group flex-shrink-0 mx-auto md:mx-0">
               <div className="w-48 h-60 sm:w-64 sm:h-80 bg-[#dee3e9] overflow-hidden rounded-xl shadow-lg">
                 <img
-                  src={userChannel?.profileImage?.url || PROFILE.avatar}
-                  alt={userChannel?.username || PROFILE.name}
+                  src={PROFILE.avatar}
+                  alt={PROFILE.name}
                   className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
                 />
               </div>
-              {isOwner && (
-                <>
-                  <button
-                    onClick={() => profileImageRef.current?.click()}
-                    disabled={uploadingProfile}
-                    className="absolute inset-0 rounded-xl bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-all"
-                  >
-                    {uploadingProfile ? (
-                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                    )}
-                  </button>
-                  <input
-                    ref={profileImageRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleProfileImageChange}
-                  />
-                </>
-              )}
               <div className="absolute -bottom-4 -right-4 bg-[#006591] px-3 sm:px-4 py-2 text-white text-xs uppercase tracking-widest rounded-sm shadow-xl">
-                {userChannel?.isFollowing ? "Following" : PROFILE.role}
+                {PROFILE.role}
               </div>
             </div>
 
-            {/* Bio — use real data, fallback to static */}
+            {/* Bio */}
             <div className="flex-1 max-w-3xl mt-6 md:mt-0">
               <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
                 {PROFILE.tags.map((tag) => (
@@ -415,20 +205,20 @@ const CuratorProfile = () => {
                 ))}
               </div>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tighter text-[#171c20] mb-6 sm:mb-8 leading-[0.9]">
-                {userChannel?.username || PROFILE.name}
+                {PROFILE.name}
               </h1>
               <p className="text-base sm:text-xl text-[#3e4850] leading-relaxed">
-                {userChannel?.bio || PROFILE.bio1}
+                {PROFILE.bio1}
               </p>
               <p className="text-base sm:text-xl text-[#3e4850] mt-4 leading-relaxed">
                 {PROFILE.bio2}
               </p>
 
-              {/* Stats — use real data */}
-              <div className="grid grid-cols-3 gap-6 sm:gap-8 mt-10 sm:mt-16 pt-8 sm:pt-12 border-t border-[#bec8d2]/20 max-w-sm">
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-6 sm:gap-8 mt-10 sm:mt-16 pt-8 sm:pt-12 border-t border-[#bec8d2]/20 max-w-xs">
                 <div>
                   <div className="text-3xl sm:text-4xl font-black text-[#006591] tracking-tighter">
-                    {userChannel?.followerCount ?? 0}
+                    {PROFILE.stats.followers}
                   </div>
                   <div className="text-xs uppercase tracking-[0.2em] font-bold text-[#6e7881] mt-1">
                     Followers
@@ -436,207 +226,16 @@ const CuratorProfile = () => {
                 </div>
                 <div>
                   <div className="text-3xl sm:text-4xl font-black text-[#006591] tracking-tighter">
-                    {userChannel?.followingToCount ?? 0}
+                    {PROFILE.stats.following}
                   </div>
                   <div className="text-xs uppercase tracking-[0.2em] font-bold text-[#6e7881] mt-1">
                     Following
-                  </div>
-                </div>
-                <div>
-                  <div className="text-3xl sm:text-4xl font-black text-[#006591] tracking-tighter">
-                    {recentPosts.length}+
-                  </div>
-                  <div className="text-xs uppercase tracking-[0.2em] font-bold text-[#6e7881] mt-1">
-                    Posts
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
-        {/* ── Owner Settings — only shown to profile owner ── */}
-        {isOwner && (
-          <section className="max-w-screen-2xl mx-auto px-4 sm:px-8 mb-16 sm:mb-24">
-            <div className="border border-[#bec8d2]/30 rounded-2xl overflow-hidden">
-              <div className="flex border-b border-[#bec8d2]/30 bg-white">
-                <button
-                  onClick={() => setActiveTab("profile")}
-                  className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-all border-b-2 ${
-                    activeTab === "profile"
-                      ? "border-[#006591] text-[#006591]"
-                      : "border-transparent text-[#6e7881] hover:text-[#171c20]"
-                  }`}
-                >
-                  <User className="w-4 h-4" /> Edit Profile
-                </button>
-                <button
-                  onClick={() => setActiveTab("password")}
-                  className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-all border-b-2 ${
-                    activeTab === "password"
-                      ? "border-[#006591] text-[#006591]"
-                      : "border-transparent text-[#6e7881] hover:text-[#171c20]"
-                  }`}
-                >
-                  <Lock className="w-4 h-4" /> Change Password
-                </button>
-              </div>
-
-              <div className="bg-white p-6 sm:p-8">
-                {activeTab === "profile" && (
-                  <div className="max-w-lg space-y-5">
-                    <div>
-                      <label className="block text-sm font-semibold text-[#171c20] mb-1.5">
-                        Username
-                      </label>
-                      <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#bec8d2] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006591] focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[#171c20] mb-1.5">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#bec8d2] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006591] focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[#171c20] mb-1.5">
-                        Bio
-                      </label>
-                      <textarea
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        rows={3}
-                        className="w-full px-4 py-3 border border-[#bec8d2] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006591] focus:border-transparent resize-none"
-                      />
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={handleSaveDetails}
-                        disabled={savingDetails}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-[#006591] text-white text-sm font-semibold rounded-xl hover:bg-[#0ea5e9] disabled:opacity-50 transition-all"
-                      >
-                        {savingDetails ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Save className="w-4 h-4" />
-                        )}
-                        {savingDetails ? "Saving..." : "Save Changes"}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setUsername(userChannel?.username ?? "");
-                          setEmail(userChannel?.email ?? "");
-                          setBio(userChannel?.bio ?? "");
-                        }}
-                        className="flex items-center gap-2 px-5 py-2.5 text-[#6e7881] text-sm font-semibold rounded-xl hover:bg-[#f0f4fa] transition-all"
-                      >
-                        <X className="w-4 h-4" /> Reset
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "password" && (
-                  <div className="max-w-lg space-y-5">
-                    <div>
-                      <label className="block text-sm font-semibold text-[#171c20] mb-1.5">
-                        Current Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showOld ? "text" : "password"}
-                          value={oldPassword}
-                          onChange={(e) => setOldPassword(e.target.value)}
-                          className="w-full px-4 py-3 pr-12 border border-[#bec8d2] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006591] focus:border-transparent"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowOld((p) => !p)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6e7881]"
-                        >
-                          {showOld ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[#171c20] mb-1.5">
-                        New Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showNew ? "text" : "password"}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="w-full px-4 py-3 pr-12 border border-[#bec8d2] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006591] focus:border-transparent"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNew((p) => !p)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6e7881]"
-                        >
-                          {showNew ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[#171c20] mb-1.5">
-                        Confirm New Password
-                      </label>
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
-                          confirmPassword && newPassword !== confirmPassword
-                            ? "border-red-300 focus:ring-red-400"
-                            : "border-[#bec8d2] focus:ring-[#006591] focus:border-transparent"
-                        }`}
-                      />
-                      {confirmPassword && newPassword !== confirmPassword && (
-                        <p className="text-xs text-red-500 mt-1">
-                          Passwords do not match
-                        </p>
-                      )}
-                    </div>
-                    <div className="pt-2">
-                      <button
-                        onClick={handleChangePassword}
-                        disabled={
-                          savingPassword ||
-                          (!!confirmPassword && newPassword !== confirmPassword)
-                        }
-                        className="flex items-center gap-2 px-6 py-2.5 bg-[#006591] text-white text-sm font-semibold rounded-xl hover:bg-[#0ea5e9] disabled:opacity-50 transition-all"
-                      >
-                        {savingPassword ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Lock className="w-4 h-4" />
-                        )}
-                        {savingPassword ? "Updating..." : "Update Password"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* ── Feature Bento ── */}
         <section className="bg-[#f0f4fa] py-16 sm:py-24 mb-16 sm:mb-24">
@@ -948,7 +547,7 @@ const CuratorProfile = () => {
                   placeholder="Enter your email address"
                   className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-white/10 border-0 text-white placeholder:text-white/50 focus:ring-2 focus:ring-[#89ceff] outline-none transition-all"
                 />
-                <button className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-[#000000] font-bold rounded-xl hover:bg-[#676869] transition-colors active:scale-95">
+                <button className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-[#ffffff] font-bold rounded-xl hover:bg-[#676869] transition-colors active:scale-95">
                   Subscribe
                 </button>
               </div>
