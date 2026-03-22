@@ -8,7 +8,7 @@ const HomeContent = () => {
 
   const getBlogs = async (
     page: number = 1,
-    query: string = "",
+    query: string = "a",
     sortBy?: string,
     sortType?: "asc" | "desc",
   ) => {
@@ -95,7 +95,7 @@ const HomeContent = () => {
                       <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10 dark:ring-white/10"></div>
                     </div>
 
-                    <div className="max-w-xl flex-1 flex flex-col justify-between py-4">
+                    <div className="max-w-xl flex-1 flex flex-col justify-between py-4 px-2">
                       <div className="space-y-2">
                         <h3 className="text-lg font-semibold leading-6 text-black group-hover:text-gray-600 transition-colors line-clamp-1">
                           {post.title}

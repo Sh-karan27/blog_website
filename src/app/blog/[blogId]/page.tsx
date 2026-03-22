@@ -9,7 +9,6 @@ import {
   Bookmark,
   Heart,
   MessageSquare,
-  Share,
   Home,
   Compass,
   Bell,
@@ -17,34 +16,29 @@ import {
   Send,
   Edit2,
   Trash2,
-  MoreVertical,
+  Pencil,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
-// Blog interface (from your API)
 interface BlogPost {
   _id: string;
   title: string;
   description: string;
   content: string;
   coverImage: { url: string };
-  author: {
-    username: string;
-    profileImage: { url: string };
-  };
+  author: { username: string; profileImage: { url: string }; _id: string };
   createdAt: string;
   likeCount: number;
   isLiked: boolean;
+  views: number;
   commentCount: number;
+  published: boolean; // ← add thi
 }
 
-// Comment interfaces
 interface Comment {
   _id: string;
-  user: {
-    _id: string;
-    username: string;
-    profileImage: { url: string };
-  };
+  user: { _id: string; username: string; profileImage: { url: string } };
   content: string;
   createdAt: string;
   likeCount: number;
@@ -53,6 +47,9 @@ interface Comment {
 
 const SingleBlogPage = () => {
   const { blogId } = useParams() as { blogId: string };
+  const [published, setPublished] = useState<boolean>(true);
+  const [toggleLoading, setToggleLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const router = useRouter();
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -63,28 +60,23 @@ const SingleBlogPage = () => {
     id: string;
     content: string;
   } | null>(null);
-  const [userId] = useState("6673e9def8cc332b93206916"); // Replace with real user ID from auth
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [userId] = useState("6673e9def8cc332b93206916");
+  const [showComments, setShowComments] = useState(false);
+  const commentsListRef = useRef<HTMLDivElement>(null);
 
-  // Fetch blog
   useEffect(() => {
     const fetchBlog = async () => {
       try {
         setLoading(true);
         const response = await axiosInstance.get(`/blog/${blogId}`);
         setBlog(response.data.data);
-      } catch (err: any) {
+        setPublished(response.data.data?.published ?? true); // ← add this line
+      } catch (err) {
         console.error("Failed to fetch blog:", err);
       } finally {
         setLoading(false);
       }
     };
-
-    if (blogId) fetchBlog();
-  }, [blogId]);
-
-  // Fetch comments
-  useEffect(() => {
     const fetchComments = async () => {
       try {
         setLoadingComments(true);
@@ -96,16 +88,49 @@ const SingleBlogPage = () => {
         setLoadingComments(false);
       }
     };
-
-    if (blogId) fetchComments();
+    if (blogId) {
+      fetchBlog();
+      fetchComments();
+    }
   }, [blogId]);
 
-  // Scroll to bottom when new comments added
+  // Scroll comments list to bottom on new comment
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (commentsListRef.current) {
+      commentsListRef.current.scrollTop = commentsListRef.current.scrollHeight;
+    }
   }, [comments]);
 
-  // Toggle blog like
+  const handleDeleteBlog = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this blog? This cannot be undone.",
+      )
+    )
+      return;
+    try {
+      setDeleteLoading(true);
+      await axiosInstance.delete(`/blog/${blogId}`);
+      router.push("/");
+    } catch (err) {
+      console.error("Failed to delete blog:", err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    try {
+      setToggleLoading(true);
+      await axiosInstance.patch(`/blog/toggle/status/${blogId}`);
+      setPublished((prev) => !prev);
+    } catch (err) {
+      console.error("Failed to toggle status:", err);
+    } finally {
+      setToggleLoading(false);
+    }
+  };
+
   const toggleBlogLike = async () => {
     try {
       await axiosInstance.post(`/likes/toggle/v/${blogId}`);
@@ -123,21 +148,18 @@ const SingleBlogPage = () => {
     }
   };
 
-  // Toggle comment like
   const toggleCommentLike = async (commentId: string) => {
     try {
       await axiosInstance.post(`/likes/toggle/c/${commentId}`);
       setComments((prev) =>
-        prev.map((comment) =>
-          comment._id === commentId
+        prev.map((c) =>
+          c._id === commentId
             ? {
-                ...comment,
-                isLiked: !comment.isLiked,
-                likeCount: comment.isLiked
-                  ? comment.likeCount - 1
-                  : comment.likeCount + 1,
+                ...c,
+                isLiked: !c.isLiked,
+                likeCount: c.isLiked ? c.likeCount - 1 : c.likeCount + 1,
               }
-            : comment,
+            : c,
         ),
       );
     } catch (err) {
@@ -145,11 +167,9 @@ const SingleBlogPage = () => {
     }
   };
 
-  // Add new comment
   const addComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
     try {
       const response = await axiosInstance.post(`/comments/${blogId}`, {
         content: newComment,
@@ -158,7 +178,7 @@ const SingleBlogPage = () => {
         _id: response.data.data._id,
         user: {
           _id: userId,
-          username: "faizal07", // Replace with real user data
+          username: "faizal07",
           profileImage: {
             url: "http://res.cloudinary.com/karanshukla/image/upload/v1747733895/iqthluuhimomf15spe9w.jpg",
           },
@@ -168,7 +188,7 @@ const SingleBlogPage = () => {
         likeCount: 0,
         isLiked: false,
       };
-      setComments((prev) => [newCommentData, ...prev]);
+      setComments((prev) => [...prev, newCommentData]);
       setNewComment("");
       if (blog) setBlog({ ...blog, commentCount: blog.commentCount + 1 });
     } catch (err) {
@@ -176,19 +196,17 @@ const SingleBlogPage = () => {
     }
   };
 
-  // Edit comment
-  const editComment = async (e: React.FormEvent) => {
+  const editComment = async () => {
     if (!editingComment) return;
-
     try {
       await axiosInstance.put(`/comments/c/${editingComment.id}`, {
         content: editingComment.content,
       });
       setComments((prev) =>
-        prev.map((comment) =>
-          comment._id === editingComment.id
-            ? { ...comment, content: editingComment.content }
-            : comment,
+        prev.map((c) =>
+          c._id === editingComment.id
+            ? { ...c, content: editingComment.content }
+            : c,
         ),
       );
       setEditingComment(null);
@@ -197,7 +215,6 @@ const SingleBlogPage = () => {
     }
   };
 
-  // Delete comment
   const deleteComment = async (commentId: string) => {
     try {
       await axiosInstance.delete(`/comments/c/${commentId}`);
@@ -208,12 +225,11 @@ const SingleBlogPage = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
     });
-  };
 
   const formatLikes = (count: number) =>
     count > 1000 ? (count / 1000).toFixed(1) + "k" : count.toString();
@@ -236,25 +252,67 @@ const SingleBlogPage = () => {
 
   return (
     <div className="min-h-screen bg-white pb-20 md:pb-0 font-sans text-gray-900">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm px-4 py-3 flex items-center justify-between border-b border-gray-100 md:px-8 max-w-4xl mx-auto w-full">
-        <button
-          onClick={() => router.back()}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6 text-gray-800" />
-        </button>
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <Share2 className="w-6 h-6 text-gray-800" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <Bookmark className="w-6 h-6 text-gray-800" />
-          </button>
-        </div>
-      </header>
-
       <main className="max-w-4xl mx-auto">
+        {/* Action Bar — replaces floating header */}
+        <div className="mt-5  flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+
+          <div className="flex items-center gap-2">
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <Share2 className="w-5 h-5 text-gray-600" />
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <Bookmark className="w-5 h-5 text-gray-600" />
+            </button>
+
+            {userId === blog?.author?._id && (
+              <>
+                <button
+                  onClick={() => router.push(`/blog/edit/${blogId}`)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  title="Edit blog"
+                >
+                  <Pencil className="w-4 h-4 text-gray-600" />
+                </button>
+
+                <button
+                  onClick={handleToggleStatus}
+                  disabled={toggleLoading}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                    published
+                      ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                      : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
+                  }`}
+                >
+                  {published ? (
+                    <>
+                      <Eye className="w-3.5 h-3.5" /> Public
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5" /> Private
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleDeleteBlog}
+                  disabled={deleteLoading}
+                  className="p-2 hover:bg-red-50 rounded-full transition-colors"
+                  title="Delete blog"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
         {/* Hero Image */}
         <div className="w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden bg-gray-200">
           <img
@@ -265,7 +323,6 @@ const SingleBlogPage = () => {
         </div>
 
         <div className="px-5 py-6 md:px-8">
-          {/* Blog Content */}
           <div className="mb-6">
             <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full uppercase tracking-wide mb-3">
               Blog
@@ -274,7 +331,10 @@ const SingleBlogPage = () => {
               {blog.title}
             </h1>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+              <div
+                className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden"
+                onClick={() => router.push(`/profile/${blog.author._id}`)}
+              >
                 <img
                   src={blog.author.profileImage.url}
                   alt={blog.author.username}
@@ -314,8 +374,13 @@ const SingleBlogPage = () => {
                   {formatLikes(blog.likeCount)} Likes
                 </span>
               </button>
-              <button className="flex items-center gap-2 group">
-                <MessageSquare className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+              <button
+                onClick={() => setShowComments((prev) => !prev)}
+                className="flex items-center gap-2 group"
+              >
+                <MessageSquare
+                  className={`w-5 h-5 transition-colors ${showComments ? "text-blue-500 fill-blue-100" : "text-gray-400 group-hover:text-blue-500"}`}
+                />
                 <span className="text-sm font-medium text-gray-600">
                   {blog.commentCount} Comments
                 </span>
@@ -325,105 +390,100 @@ const SingleBlogPage = () => {
         </div>
 
         {/* Comments Section */}
-        <div className="px-5 py-8 md:px-8 border-t border-gray-100 bg-gray-50">
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">
-              {blog.commentCount} Comments
-            </h3>
+        {showComments && (
+          <div className="px-5 py-8 md:px-8 border-t border-gray-100 bg-gray-50">
+            <div className="max-w-4xl mx-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">
+                {blog.commentCount} Comments
+              </h3>
 
-            {/* Add New Comment Form */}
-            <form
-              onSubmit={addComment}
-              className="mb-8 p-4 bg-white rounded-xl shadow-sm border"
-            >
-              <div className="flex gap-3 mb-2">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex-shrink-0">
-                  <img
-                    src="http://res.cloudinary.com/karanshukla/image/upload/v1747733895/iqthluuhimomf15spe9w.jpg"
-                    alt="User"
-                    className="w-full h-full object-cover"
+              {/* Add New Comment Form */}
+              <form
+                onSubmit={addComment}
+                className="mb-6 p-4 bg-white rounded-xl shadow-sm border"
+              >
+                <div className="flex gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex-shrink-0">
+                    <img
+                      src="http://res.cloudinary.com/karanshukla/image/upload/v1747733895/iqthluuhimomf15spe9w.jpg"
+                      alt="User"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="flex-1 p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
                   />
                 </div>
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="flex-1 p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={!newComment.trim()}
-                className="ml-auto flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Send className="w-4 h-4" />
-                Comment
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={!newComment.trim()}
+                  className="ml-auto flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Send className="w-4 h-4" />
+                  Comment
+                </button>
+              </form>
 
-            {/* Comments List */}
-            {loadingComments ? (
-              <p className="text-gray-500 text-center py-8">
-                Loading comments...
-              </p>
-            ) : comments.length === 0 ? (
-              <p className="text-gray-500 text-center py-12">
-                No comments yet. Be the first to comment!
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {comments.map((comment) => (
-                  <CommentItem
-                    key={comment._id}
-                    comment={comment}
-                    editing={editingComment?.id === comment._id}
-                    editContent={editingComment?.content || comment.content} // ✅ Add this
-                    onEditContentChange={(content) =>
-                      setEditingComment({ id: comment._id, content })
-                    }
-                    onEdit={() =>
-                      setEditingComment({
-                        id: comment._id,
-                        content: comment.content,
-                      })
-                    } // ✅ Add this
-                    onSave={() =>
-                      editComment(
-                        new Event("submit") as unknown as React.FormEvent,
-                      )
-                    }
-                    onCancel={() => setEditingComment(null)}
-                    onDelete={() => deleteComment(comment._id)}
-                    onLike={() => toggleCommentLike(comment._id)}
-                    currentUserId={userId}
-                  />
-                ))}
-                <div ref={bottomRef} />
-              </div>
-            )}
+              {/* ✅ Scrollable Comments List */}
+              {loadingComments ? (
+                <p className="text-gray-500 text-center py-8">
+                  Loading comments...
+                </p>
+              ) : comments.length === 0 ? (
+                <p className="text-gray-500 text-center py-12">
+                  No comments yet. Be the first to comment!
+                </p>
+              ) : (
+                <div
+                  ref={commentsListRef}
+                  className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                >
+                  {comments.map((comment) => (
+                    <CommentItem
+                      key={comment._id}
+                      comment={comment}
+                      editing={editingComment?.id === comment._id}
+                      editContent={
+                        editingComment?.id === comment._id
+                          ? editingComment.content
+                          : comment.content
+                      }
+                      onEditContentChange={(content) =>
+                        setEditingComment({ id: comment._id, content })
+                      }
+                      onEdit={() =>
+                        setEditingComment({
+                          id: comment._id,
+                          content: comment.content,
+                        })
+                      }
+                      onSave={editComment}
+                      onCancel={() => setEditingComment(null)}
+                      onDelete={() => deleteComment(comment._id)}
+                      onLike={() => toggleCommentLike(comment._id)}
+                      currentUserId={userId}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </main>
-
-      {/* Mobile Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 py-2 px-6 flex justify-between items-center z-50 md:hidden">
-        <NavIcon Icon={Home} label="Home" active />
-        <NavIcon Icon={Compass} label="Explore" />
-        <NavIcon Icon={Bell} label="Alerts" />
-        <NavIcon Icon={User} label="Profile" />
-      </nav>
     </div>
   );
 };
 
-// Comment Item Component
 interface CommentItemProps {
   comment: Comment;
   editing: boolean;
-  editContent: string; // ✅ Add this
+  editContent: string;
   onEditContentChange: (content: string) => void;
-  onEdit: () => void; // ✅ Add this
+  onEdit: () => void;
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
@@ -434,21 +494,22 @@ interface CommentItemProps {
 const CommentItem = ({
   comment,
   editing,
+  editContent,
   onEditContentChange,
+  onEdit,
   onSave,
   onCancel,
   onDelete,
   onLike,
   currentUserId,
 }: CommentItemProps) => {
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString("en-US", {
+  const formatTime = (dateString: string) =>
+    new Date(dateString).toLocaleString("en-US", {
       month: "short",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
     });
-  };
 
   const formatLikes = (count: number) =>
     count > 1000 ? (count / 1000).toFixed(1) + "k" : count.toString();
@@ -467,7 +528,7 @@ const CommentItem = ({
         {editing ? (
           <>
             <textarea
-              value={onEditContentChange.toString()} // This will be passed properly
+              value={editContent}
               onChange={(e) => onEditContentChange(e.target.value)}
               className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
               rows={3}
@@ -493,21 +554,24 @@ const CommentItem = ({
               <span className="font-semibold text-gray-900 text-sm">
                 {comment.user.username}
               </span>
-              <div className="flex items-center gap-2">
-                {currentUserId === comment.user._id && (
-                  <>
-                    <button className="p-1 hover:bg-gray-100 rounded-full">
-                      <Edit2 className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button
-                      onClick={onDelete}
-                      className="p-1 hover:bg-gray-100 rounded-full"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600" />
-                    </button>
-                  </>
-                )}
-              </div>
+              {currentUserId === comment.user._id && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onEdit}
+                    className="p-1 hover:bg-gray-100 rounded-full"
+                  >
+                    {" "}
+                    {/* ✅ Fixed: was missing onClick */}
+                    <Edit2 className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={onDelete}
+                    className="p-1 hover:bg-gray-100 rounded-full"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600" />
+                  </button>
+                </div>
+              )}
             </div>
             <p className="text-sm text-gray-900 leading-relaxed mb-3">
               {comment.content}

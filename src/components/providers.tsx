@@ -32,7 +32,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         theme="colored"
       />
       {!hideNavbar && <Navbar />}
-      {isProtected ? <ProtectedRoute>{children}</ProtectedRoute> : children}
+      <div className={!hideNavbar ? "pt-[73px]" : ""}>
+        {isProtected ? <ProtectedRoute>{children}</ProtectedRoute> : children}
+      </div>
       {!hideNavbar && <Footer />}
     </Provider>
   );
