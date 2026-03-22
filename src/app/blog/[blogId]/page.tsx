@@ -378,9 +378,16 @@ const SingleBlogPage = () => {
                     key={comment._id}
                     comment={comment}
                     editing={editingComment?.id === comment._id}
+                    editContent={editingComment?.content || comment.content} // ✅ Add this
                     onEditContentChange={(content) =>
                       setEditingComment({ id: comment._id, content })
                     }
+                    onEdit={() =>
+                      setEditingComment({
+                        id: comment._id,
+                        content: comment.content,
+                      })
+                    } // ✅ Add this
                     onSave={() =>
                       editComment(
                         new Event("submit") as unknown as React.FormEvent,
@@ -414,7 +421,9 @@ const SingleBlogPage = () => {
 interface CommentItemProps {
   comment: Comment;
   editing: boolean;
+  editContent: string; // ✅ Add this
   onEditContentChange: (content: string) => void;
+  onEdit: () => void; // ✅ Add this
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
