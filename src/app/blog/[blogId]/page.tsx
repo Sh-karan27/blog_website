@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
+import { io } from "socket.io-client";
 import {
   ArrowLeft,
   Share2,
@@ -46,6 +47,7 @@ interface Comment {
 }
 
 const SingleBlogPage = () => {
+  const socket = io("http://localhost:3000");
   const { blogId } = useParams() as { blogId: string };
   const [published, setPublished] = useState<boolean>(true);
   const [toggleLoading, setToggleLoading] = useState(false);
@@ -63,7 +65,37 @@ const SingleBlogPage = () => {
   const [userId] = useState("6673e9def8cc332b93206916");
   const [showComments, setShowComments] = useState(false);
   const commentsListRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!blogId) return;
 
+    socket.emit("join-blog", blogId);
+
+    const handleBlogLiked = (data: {
+      blogId: string;
+      likeCount: number;
+      isLiked?: boolean;
+      title?: string;
+    }) => {
+      console.log("🔥 blog-liked received:", data);
+
+      if (data.blogId === blogId) {
+        setBlog((prev) =>
+          prev
+            ? {
+                ...prev,
+                likeCount: data.likeCount,
+              }
+            : null,
+        );
+      }
+    };
+
+    socket.on("blog-liked", handleBlogLiked);
+
+    return () => {
+      socket.off("blog-liked", handleBlogLiked);
+    };
+  }, [blogId]);
   useEffect(() => {
     const fetchBlog = async () => {
       try {
@@ -133,16 +165,27 @@ const SingleBlogPage = () => {
 
   const toggleBlogLike = async () => {
     try {
-      await axiosInstance.post(`/likes/toggle/v/${blogId}`);
+      const response = await axiosInstance.post(`/likes/toggle/v/${blogId}`);
+      const data = response.data;
+
       setBlog((prev) =>
         prev
           ? {
               ...prev,
-              isLiked: !prev.isLiked,
-              likeCount: prev.isLiked ? prev.likeCount - 1 : prev.likeCount + 1,
+              likeCount: data.likeCount,
+              isLiked: data.isLiked,
             }
           : null,
       );
+
+      socket.emit("like-blog", {
+        blogId,
+        likeCount: data.likeCount,
+        isLiked: data.isLiked,
+        title: data.title,
+      });
+
+      console.log("✅ like-blog emitted");
     } catch (err) {
       console.error("Failed to toggle like:", err);
     }
