@@ -37,7 +37,7 @@ export default function RegisterComponent() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const handleInputChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -85,6 +85,7 @@ export default function RegisterComponent() {
   };
 
   const handleSubmit = async () => {
+    if (loading) return;
     if (!validateForm()) return;
 
     setLoading(true);
@@ -97,6 +98,7 @@ export default function RegisterComponent() {
       data.append("email", formData.email);
       data.append("password", formData.password);
       data.append("bio", formData.bio);
+
       if (formData.profileImage) {
         data.append("profileImage", formData.profileImage);
       }
@@ -110,11 +112,7 @@ export default function RegisterComponent() {
 
       setSuccess("Account created successfully!");
       console.log("✅ Registered:", res.data);
-
-      // Optionally redirect to login
-      // router.push("/login");
     } catch (error: any) {
-      console.error("❌ Registration failed:", error);
       setApiError(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
@@ -122,177 +120,130 @@ export default function RegisterComponent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col w-full">
-      {/* Main Content */}
-      <main className="flex-grow flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-black">
-              Create Account
-            </h2>
-            <p className="mt-2 text-sm text-black/60">
-              Join us and start your journey today.
-            </p>
-          </div>
-          {apiError && (
-            <p className="text-red-600 text-center text-sm">{apiError}</p>
-          )}
-          {success && (
-            <p className="text-green-600 text-center text-sm">{success}</p>
-          )}
+    <div className="min-h-screen  flex flex-col">
+      <main className="flex-grow flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          {/* Card */}
+          <div className="bg-black text-white rounded-2xl p-8 space-y-6">
+            {/* Heading */}
+            <div className="text-center">
+              <h2 className="text-3xl font-bold tracking-tight">
+                Create account
+              </h2>
+              <p className="mt-2 text-sm text-white/60">
+                Start your journey with us
+              </p>
+            </div>
 
-          <div className="mt-8 space-y-6">
-            {/* Username Field */}
-            <div>
-              <label className="sr-only" htmlFor="username">
-                Username
-              </label>
+            {/* Error / Success */}
+            {apiError && (
+              <p className="text-red-400 text-sm text-center">{apiError}</p>
+            )}
+            {success && (
+              <p className="text-green-400 text-sm text-center">{success}</p>
+            )}
+
+            {/* FORM (Enter works automatically) */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              className="space-y-4"
+            >
+              {/* Username */}
               <input
-                id="username"
                 name="username"
                 type="text"
                 value={formData.username}
                 onChange={handleInputChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-black/10 placeholder-black/50 text-black bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 sm:text-sm"
                 placeholder="Username"
+                className="w-full px-4 py-3 rounded-lg bg-transparent border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition"
               />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
-              )}
-            </div>
 
-            {/* Email Field */}
-            <div>
-              <label className="sr-only" htmlFor="email">
-                Email
-              </label>
+              {/* Email */}
               <input
-                id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-black/10 placeholder-black/50 text-black bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 sm:text-sm"
                 placeholder="Email"
+                className="w-full px-4 py-3 rounded-lg bg-transparent border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition"
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
 
-            {/* Password Fields */}
-            <div className="rounded-lg shadow-sm -space-y-px">
-              <div>
-                <label className="sr-only" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="appearance-none rounded-t-lg relative block w-full px-3 py-3 border border-black/10 placeholder-black/50 text-black bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 focus:z-10 sm:text-sm"
-                  placeholder="Password"
-                />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="confirmPassword">
-                  Confirm Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="appearance-none rounded-b-lg relative block w-full px-3 py-3 border border-black/10 placeholder-black/50 text-black bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 focus:z-10 sm:text-sm"
-                  placeholder="Confirm Password"
-                />
-              </div>
-            </div>
-            {(errors.password || errors.confirmPassword) && (
-              <div className="space-y-1">
-                {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password}</p>
-                )}
-                {errors.confirmPassword && (
-                  <p className="text-sm text-red-600">
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
-            )}
+              {/* Password */}
+              <input
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="Password"
+                className="w-full px-4 py-3 rounded-lg bg-transparent border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition"
+              />
 
-            {/* Bio Field */}
-            <div>
-              <label className="sr-only" htmlFor="bio">
-                Bio
-              </label>
+              {/* Confirm Password */}
+              <input
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Confirm Password"
+                className="w-full px-4 py-3 rounded-lg bg-transparent border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition"
+              />
+
+              {/* Bio */}
               <textarea
-                id="bio"
                 name="bio"
                 rows={3}
                 value={formData.bio}
                 onChange={handleInputChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-black/10 placeholder-black/50 text-black bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 sm:text-sm resize-none"
-                placeholder="Tell us about yourself (optional)"
+                placeholder="Bio (optional)"
+                className="w-full px-4 py-3 rounded-lg bg-transparent border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white resize-none transition"
               />
-            </div>
 
-            {/* Profile Image */}
-            <div>
-              <label className="block text-sm font-medium text-black/80 mb-2">
-                Profile Image *
-              </label>
-              <input
-                id="profileImage"
-                name="profileImage"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="block w-full text-sm text-black/60 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-              />
-              {errors.profileImage && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.profileImage}
-                </p>
-              )}
-            </div>
+              {/* Profile Image */}
+              <div>
+                <p className="text-xs text-white/50 mb-1">Profile Image *</p>
+                <input
+                  type="file"
+                  name="profileImage"
+                  onChange={handleFileChange}
+                  className="w-full text-sm file:bg-white file:text-black file:px-4 file:py-2 file:rounded-md file:border-0 hover:file:bg-gray-200"
+                />
+              </div>
 
-            {/* Cover Image */}
-            <div>
-              <label className="block text-sm font-medium text-black/80 mb-2">
-                Cover Image (optional)
-              </label>
-              <input
-                id="coverImage"
-                name="coverImage"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="block w-full text-sm text-black/60 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-              />
-            </div>
+              {/* Cover Image */}
+              <div>
+                <p className="text-xs text-white/50 mb-1">Cover Image</p>
+                <input
+                  type="file"
+                  name="coverImage"
+                  onChange={handleFileChange}
+                  className="w-full text-sm file:bg-white file:text-black file:px-4 file:py-2 file:rounded-md file:border-0 hover:file:bg-gray-200"
+                />
+              </div>
 
-            <div>
+              {/* Button */}
               <button
-                onClick={handleSubmit}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 rounded-lg bg-white text-black font-semibold hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center"
               >
-                Create Account
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Create Account"
+                )}
               </button>
-            </div>
+            </form>
           </div>
 
-          <p className="mt-2 text-center text-sm text-black/60">
+          {/* Footer */}
+          <p className="mt-6 text-center text-sm text-black/60">
             Already have an account?{" "}
             <a
               href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-semibold text-black hover:underline"
             >
               Sign in
             </a>

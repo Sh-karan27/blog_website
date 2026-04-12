@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import axiosInstance from "@/lib/axios"; // your axios instance
+import axiosInstance from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtil";
 
@@ -13,10 +13,12 @@ export default function LoginComponent() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setError(""); // clear error on input
+    setError("");
   };
 
   const handleSubmit = async () => {
+    if (loading) return;
+
     setLoading(true);
     setError("");
 
@@ -28,109 +30,99 @@ export default function LoginComponent() {
 
       const { accessToken, refreshToken, user } = response.data.data;
 
-      // Save tokens in localStorage
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("profileImage", user?.profileImage?.url);
 
-      console.log("Login successful", user);
-
-      // Redirect to home page or dashboard
       router.push("/");
       showSuccessToast("Login successful!");
     } catch (err: any) {
-      console.error(err);
       showErrorToast(err.response?.data?.message || "Something went wrong");
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      setError(
+        err.response?.data?.message ||
+          "Something went wrong. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // 🔥 Handle Enter key
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSubmit();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col w-full">
-      <main className="flex-grow flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-black">
-              Welcome back
-            </h2>
-            <p className="mt-2 text-sm text-black/60">
-              Sign in to continue to your account.
-            </p>
+    <div className="min-h-screen bg-white flex flex-col">
+      <main className="flex-grow flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          {/* Card */}
+          <div className="bg-black text-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.2)] p-8 space-y-6">
+            {/* Heading */}
+            <div className="text-center">
+              <h2 className="text-3xl font-bold tracking-tight">
+                Welcome back
+              </h2>
+              <p className="mt-2 text-sm text-white/60">Sign in to continue</p>
+            </div>
+
+            {/* Inputs */}
+            <div className="space-y-4">
+              <input
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Email"
+                className="w-full px-4 py-3 rounded-lg bg-transparent border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition"
+              />
+
+              <input
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Password"
+                className="w-full px-4 py-3 rounded-lg bg-transparent border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition"
+              />
+            </div>
+
+            {/* Error */}
+            {error && (
+              <p className="text-red-400 text-sm text-center">{error}</p>
+            )}
+
+            {/* Forgot */}
+            <div className="text-right">
+              <a className="text-sm text-white/50 hover:text-white transition cursor-pointer">
+                Forgot password?
+              </a>
+            </div>
+
+            {/* Button */}
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full py-3 rounded-lg bg-white text-black font-semibold hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              ) : (
+                "Log In"
+              )}
+            </button>
           </div>
 
-          <div className="mt-8 space-y-6">
-            <div className="rounded-lg shadow-sm -space-y-px">
-              <div>
-                <label className="sr-only" htmlFor="email-address">
-                  Email
-                </label>
-                <input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="appearance-none rounded-t-lg relative block w-full px-3 py-3 border border-black/10 placeholder-black/50 text-black bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 focus:z-10 sm:text-sm"
-                  placeholder="Email"
-                />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="appearance-none rounded-b-lg relative block w-full px-3 py-3 border border-black/10 placeholder-black/50 text-black bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 focus:z-10 sm:text-sm"
-                  placeholder="Password"
-                />
-              </div>
-            </div>
-
-            {error && <p className="text-red-600 text-sm">{error}</p>}
-
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Forgot your password?
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 disabled:opacity-50"
-              >
-                {loading ? (
-                  <span className="loading loading-dots loading-sm"></span>
-                ) : (
-                  "Log In"
-                )}
-              </button>
-            </div>
-          </div>
-
-          <p className="mt-2 text-center text-sm text-black/60">
-            Don't have an account?{" "}
+          {/* Footer */}
+          <p className="mt-6 text-center text-sm text-black/60">
+            Don’t have an account?{" "}
             <a
               href="/register"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-semibold text-black hover:underline"
             >
               Sign up
             </a>
