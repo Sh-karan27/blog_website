@@ -20,7 +20,7 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor (optional – handle 401, refresh tokens, etc.)
@@ -47,7 +47,7 @@ axiosInstance.interceptors.response.use(
             "http://localhost:8000/api/v1"
           }/users/refresh-token`,
           { refreshToken },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         const { accessToken, refreshToken: newRefreshToken } = res.data.data;
@@ -69,7 +69,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

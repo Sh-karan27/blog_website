@@ -292,7 +292,9 @@ const SingleBlogPage = () => {
       </div>
     );
   }
-
+  const cleanedContent = blog.content
+    .replace(/\r\n/g, "<br>")
+    .replace(/<img[^>]+src="blob:[^"]+"[^>]*>/g, "");
   return (
     <div className="min-h-screen bg-white pb-20 md:pb-0 font-sans text-gray-900">
       <main className="max-w-4xl mx-auto">
@@ -370,9 +372,11 @@ const SingleBlogPage = () => {
             <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full uppercase tracking-wide mb-3">
               Blog
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold leading-tight text-gray-900 mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold leading-tight text-gray-900 mb-3">
               {blog.title}
             </h1>
+
+            <p className="text-lg text-gray-500 mb-5">{blog.description}</p>
             <div className="flex items-center gap-3 mb-6">
               <div
                 className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden"
@@ -395,10 +399,24 @@ const SingleBlogPage = () => {
             </div>
           </div>
 
-          <article className="prose prose-lg max-w-none text-gray-600 leading-relaxed mb-8">
+          <article className="max-w-3xl mx-auto mb-12">
             <div
+              className="
+                prose prose-neutral lg:prose-lg max-w-none
+                prose-headings:font-bold prose-headings:text-gray-900
+                prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+                prose-p:text-gray-700 prose-p:leading-7 prose-p:my-4
+                prose-a:text-blue-600 hover:prose-a:underline
+                prose-strong:text-gray-900
+                prose-em:text-gray-800
+                prose-blockquote:border-l-4 prose-blockquote:border-gray-300
+                prose-blockquote:pl-4 prose-blockquote:text-gray-600 prose-blockquote:italic
+                prose-img:rounded-xl prose-img:shadow-sm prose-img:my-6 prose-img:w-full prose-img:object-cover
+                prose-ul:pl-5 prose-ol:pl-5
+                prose-li:marker:text-gray-400
+              "
               dangerouslySetInnerHTML={{
-                __html: blog.content.replace(/\r\n/g, "<br>"),
+                __html: cleanedContent,
               }}
             />
           </article>
