@@ -82,9 +82,9 @@ const SingleBlogPage = () => {
         setBlog((prev) =>
           prev
             ? {
-                ...prev,
-                likeCount: data.likeCount,
-              }
+              ...prev,
+              likeCount: data.likeCount,
+            }
             : null,
         );
       }
@@ -171,10 +171,10 @@ const SingleBlogPage = () => {
       setBlog((prev) =>
         prev
           ? {
-              ...prev,
-              likeCount: data.likeCount,
-              isLiked: data.isLiked,
-            }
+            ...prev,
+            likeCount: data.likeCount,
+            isLiked: data.isLiked,
+          }
           : null,
       );
 
@@ -198,10 +198,10 @@ const SingleBlogPage = () => {
         prev.map((c) =>
           c._id === commentId
             ? {
-                ...c,
-                isLiked: !c.isLiked,
-                likeCount: c.isLiked ? c.likeCount - 1 : c.likeCount + 1,
-              }
+              ...c,
+              isLiked: !c.isLiked,
+              likeCount: c.isLiked ? c.likeCount - 1 : c.likeCount + 1,
+            }
             : c,
         ),
       );
@@ -292,9 +292,7 @@ const SingleBlogPage = () => {
       </div>
     );
   }
-  const cleanedContent = blog.content
-    .replace(/\r\n/g, "<br>")
-    .replace(/<img[^>]+src="blob:[^"]+"[^>]*>/g, "");
+  const cleanedContent = blog.content;
   return (
     <div className="min-h-screen bg-white pb-20 md:pb-0 font-sans text-gray-900">
       <main className="max-w-4xl mx-auto">
@@ -329,11 +327,10 @@ const SingleBlogPage = () => {
                 <button
                   onClick={handleToggleStatus}
                   disabled={toggleLoading}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
-                    published
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${published
                       ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                       : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   {published ? (
                     <>

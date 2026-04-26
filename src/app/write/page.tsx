@@ -21,6 +21,7 @@ export default function WritePage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishSuccess, setPublishSuccess] = useState(false);
+  const [contentImages, setContentImages] = useState<File[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null); // cover image
   const editorImageInputRef = useRef<HTMLInputElement>(null); // editor image
@@ -66,8 +67,27 @@ export default function WritePage() {
     const file = e.target.files?.[0];
     if (!file || !editor) return;
 
-    const url = URL.createObjectURL(file);
-    editor.chain().focus().setImage({ src: url }).run();
+    // 🚫 limit 3 images
+    if (contentImages.length >= 3) {
+      alert("You can only upload up to 3 images.");
+      return;
+    }
+
+    const index = contentImages.length;
+
+    // store file
+    setContentImages((prev) => [...prev, file]);
+
+    const previewUrl = URL.createObjectURL(file);
+
+    editor
+      .chain()
+      .focus()
+      .setImage({
+        src: previewUrl,          // ✅ show image
+        alt: `__IMAGE_${index}__` // ✅ store mapping
+      })
+      .run();
   };
 
   const handlePublish = async () => {
@@ -91,6 +111,11 @@ export default function WritePage() {
     if (coverImageFile) {
       formData.append("coverImage", coverImageFile);
     }
+
+    // 🔥 ADD THIS
+    contentImages.forEach((file) => {
+      formData.append("content_images", file);
+    });
 
     try {
       setIsPublishing(true);
@@ -228,11 +253,10 @@ export default function WritePage() {
             {/* Bold */}
             <button
               onClick={toggleBold}
-              className={`p-2 rounded-md transition ${
-                editor?.isActive("bold")
-                  ? "bg-white text-black"
-                  : "text-gray-300 hover:text-white"
-              }`}
+              className={`p-2 rounded-md transition ${editor?.isActive("bold")
+                ? "bg-white text-black"
+                : "text-gray-300 hover:text-white"
+                }`}
             >
               <FiBold size={16} />
             </button>
@@ -240,11 +264,10 @@ export default function WritePage() {
             {/* Italic */}
             <button
               onClick={toggleItalic}
-              className={`p-2 rounded-md transition ${
-                editor?.isActive("italic")
-                  ? "bg-white text-black"
-                  : "text-gray-300 hover:text-white"
-              }`}
+              className={`p-2 rounded-md transition ${editor?.isActive("italic")
+                ? "bg-white text-black"
+                : "text-gray-300 hover:text-white"
+                }`}
             >
               <FiItalic size={16} />
             </button>
@@ -254,11 +277,10 @@ export default function WritePage() {
             {/* H1 */}
             <button
               onClick={toggleHeading}
-              className={`p-2 rounded-md transition ${
-                editor?.isActive("heading", { level: 1 })
-                  ? "bg-white text-black"
-                  : "text-gray-300 hover:text-white"
-              }`}
+              className={`p-2 rounded-md transition ${editor?.isActive("heading", { level: 1 })
+                ? "bg-white text-black"
+                : "text-gray-300 hover:text-white"
+                }`}
             >
               <LuHeading1 size={16} />
             </button>
@@ -266,11 +288,10 @@ export default function WritePage() {
             {/* Quote */}
             <button
               onClick={toggleBlockquote}
-              className={`p-2 rounded-md transition ${
-                editor?.isActive("blockquote")
-                  ? "bg-white text-black"
-                  : "text-gray-300 hover:text-white"
-              }`}
+              className={`p-2 rounded-md transition ${editor?.isActive("blockquote")
+                ? "bg-white text-black"
+                : "text-gray-300 hover:text-white"
+                }`}
             >
               <RiDoubleQuotesL size={16} />
             </button>
@@ -280,11 +301,10 @@ export default function WritePage() {
             {/* Link */}
             <button
               onClick={setLink}
-              className={`p-2 rounded-md transition ${
-                editor?.isActive("link")
-                  ? "bg-white text-black"
-                  : "text-gray-300 hover:text-white"
-              }`}
+              className={`p-2 rounded-md transition ${editor?.isActive("link")
+                ? "bg-white text-black"
+                : "text-gray-300 hover:text-white"
+                }`}
             >
               <FiLink size={16} />
             </button>
