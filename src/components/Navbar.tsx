@@ -3,6 +3,12 @@ import axiosInstance from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+const InkDrop = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C12 2 4 10.5 4 15a8 8 0 0016 0C20 10.5 12 2 12 2z" />
+  </svg>
+);
+
 const Navbar = () => {
   const router = useRouter();
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -19,10 +25,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
     };
@@ -32,9 +35,7 @@ const Navbar = () => {
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
 
   const logoutUser = async () => {
@@ -53,120 +54,96 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 bg-white shadow-[0_8px_24px_rgba(23,28,32,0.06)] border-b border-base-200">
-        <div className="flex justify-between items-center px-4 sm:px-8 py-4 max-w-screen-2xl mx-auto">
-          {/* Left: Logo + Nav Links — ORIGINAL STRUCTURE */}
+      <header className="fixed top-0 w-full z-50 bg-[#995F2F] shadow-md">
+        <div className="flex justify-between items-center px-4 sm:px-8 h-16 max-w-screen-2xl mx-auto">
+
+          {/* Left: Logo + Nav */}
           <div className="flex items-center gap-8">
-            {/* Logo — UNCHANGED */}
             <div
               className="flex items-center gap-2 cursor-pointer flex-shrink-0"
               onClick={() => router.push("/")}
             >
-              <div className="h-7 w-7 text-primary">
-                <svg
-                  fill="none"
-                  viewBox="0 0 48 48"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    clipRule="evenodd"
-                    fill="currentColor"
-                    fillRule="evenodd"
-                    d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z"
-                  />
-                </svg>
-              </div>
-              <span className="text-xl font-bold tracking-tighter">
-                Tech Insights
-              </span>
+              <InkDrop className="w-6 h-6 text-white" />
+              <span className="text-xl font-black tracking-tighter text-white">Inkwell</span>
             </div>
 
-            {/* Nav Links — visible always on desktop, hidden only on mobile */}
-            <nav className="flex items-center gap-6 lg:gap-8 text-sm tracking-wide font-medium max-md:hidden">
-              <a href="/" className="hover:text-primary transition-colors">
-                Home
-              </a>
-              <a
-                href="/articles"
-                className="hover:text-primary transition-colors"
-              >
-                Articles
-              </a>
-              <a href="/about" className="hover:text-primary transition-colors">
-                About
-              </a>
-              <a
-                href="/contact"
-                className="hover:text-primary transition-colors"
-              >
-                Contact
-              </a>
+            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+              {[
+                { label: "Home", href: "/" },
+                { label: "Articles", href: "/articles" },
+                { label: "About", href: "/about" },
+                { label: "Contact", href: "/contact" },
+              ].map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  {item.label}
+                </a>
+              ))}
             </nav>
           </div>
 
-          {/* Right: Avatar (desktop) + Hamburger (mobile) */}
+          {/* Right: Write + Avatar */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Avatar Dropdown — desktop only */}
-            <div className="relative max-md:hidden" ref={dropdownRef}>
+            <button
+              onClick={() => router.push("/write")}
+              className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-white text-[#995F2F] text-sm font-bold rounded-lg hover:bg-[#F5F0EB] transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Write
+            </button>
+
+            {/* Avatar dropdown — desktop */}
+            <div className="hidden md:block relative" ref={dropdownRef}>
               <button
                 className="p-0 bg-transparent border-none cursor-pointer rounded-full"
                 onClick={() => setDropdownOpen((prev) => !prev)}
               >
                 <img
                   alt="User avatar"
-                  src={
-                    profileImage ||
-                    "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                  }
-                  className="w-10 h-10 rounded-full object-cover ring-2 ring-base-300 hover:ring-primary transition-all"
+                  src={profileImage || "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"}
+                  className="w-9 h-9 rounded-full object-cover ring-2 ring-white/60 hover:ring-white transition-all"
                 />
               </button>
 
               {dropdownOpen && (
-                <ul className="menu menu-sm absolute right-0 mt-2 w-52 bg-base-100 rounded-box shadow-lg z-50 p-2 border border-base-200">
-                  <li>
-                    <button
-                      onClick={() => {
-                        router.push("/profile");
-                        setDropdownOpen(false);
-                      }}
-                      className="w-full text-left"
-                    >
-                      Profile
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => {
-                        router.push("/settings");
-                        setDropdownOpen(false);
-                      }}
-                      className="w-full text-left"
-                    >
-                      Settings
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={logoutUser}
-                      className="w-full text-left text-error"
-                    >
-                      Logout
-                    </button>
-                  </li>
-                </ul>
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl z-50 py-1 border border-[#E5E5E5] overflow-hidden">
+                  <button
+                    onClick={() => { router.push("/profile"); setDropdownOpen(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-[#F5F5F5] transition-colors"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => { router.push("/settings"); setDropdownOpen(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-[#F5F5F5] transition-colors"
+                  >
+                    Settings
+                  </button>
+                  <div className="border-t border-[#E5E5E5] my-1" />
+                  <button
+                    onClick={logoutUser}
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
               )}
             </div>
 
-            {/* Hamburger — mobile only */}
+            {/* Hamburger — mobile */}
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-[5px] rounded-md hover:bg-base-200 transition-colors"
+              className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-[5px] rounded-md hover:bg-white/10 transition-colors"
             >
-              <span className="block w-5 h-[2px] bg-black rounded" />
-              <span className="block w-5 h-[2px] bg-black rounded" />
-              <span className="block w-5 h-[2px] bg-black rounded" />
+              <span className="block w-5 h-[2px] bg-white rounded" />
+              <span className="block w-5 h-[2px] bg-white rounded" />
+              <span className="block w-5 h-[2px] bg-white rounded" />
             </button>
           </div>
         </div>
@@ -174,56 +151,25 @@ const Navbar = () => {
 
       {/* Mobile fullscreen menu */}
       <div
-        className={`md:hidden fixed inset-0 z-[100] bg-black flex flex-col transition-all duration-500 ease-in-out ${
-          menuOpen
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-full pointer-events-none"
+        className={`md:hidden fixed inset-0 z-[100] bg-[#1A0E04] flex flex-col transition-all duration-500 ease-in-out ${
+          menuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
         }`}
       >
-        {/* Top bar: logo + X */}
+        {/* Top bar */}
         <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">
           <div
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => {
-              router.push("/");
-              setMenuOpen(false);
-            }}
+            onClick={() => { router.push("/"); setMenuOpen(false); }}
           >
-            <div className="h-7 w-7 text-white">
-              <svg
-                fill="none"
-                viewBox="0 0 48 48"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  clipRule="evenodd"
-                  fill="currentColor"
-                  fillRule="evenodd"
-                  d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z"
-                />
-              </svg>
-            </div>
-            <span className="text-xl font-bold tracking-tighter text-white">
-              Tech Insights
-            </span>
+            <InkDrop className="w-6 h-6 text-[#995F2F]" />
+            <span className="text-xl font-black tracking-tighter text-white">Inkwell</span>
           </div>
-
           <button
             onClick={() => setMenuOpen(false)}
             aria-label="Close menu"
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -235,6 +181,7 @@ const Navbar = () => {
           {[
             { label: "Home", href: "/" },
             { label: "Articles", href: "/articles" },
+            { label: "Write", href: "/write" },
             { label: "About", href: "/about" },
             { label: "Contact", href: "/contact" },
           ].map((item, i) => (
@@ -250,22 +197,16 @@ const Navbar = () => {
           ))}
         </nav>
 
-        {/* Bottom: user actions */}
+        {/* Bottom actions */}
         <div className="px-6 py-8 border-t border-white/10 flex flex-col gap-2">
           <button
-            onClick={() => {
-              router.push("/profile");
-              setMenuOpen(false);
-            }}
+            onClick={() => { router.push("/profile"); setMenuOpen(false); }}
             className="w-full text-left text-white/60 text-sm hover:text-white transition-colors py-2"
           >
             Profile
           </button>
           <button
-            onClick={() => {
-              router.push("/settings");
-              setMenuOpen(false);
-            }}
+            onClick={() => { router.push("/settings"); setMenuOpen(false); }}
             className="w-full text-left text-white/60 text-sm hover:text-white transition-colors py-2"
           >
             Settings

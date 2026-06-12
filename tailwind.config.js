@@ -9,19 +9,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        inkwell: {
+          accent: "#995F2F",
+          hover: "#7A4A22",
+          light: "#C88040",
+          surface: "#F5F0EB",
+          border: "#E5E5E5",
+          muted: "#666666",
+        },
         dark: {
-          bg: "#18191B",
-          card: "#232429",
-          input: "#26272B",
-          border: "#303136",
-          text: "#F3F4F6",
-          textMuted: "#A1A1AA",
-          textDisabled: "#626269",
-          accent: "#363B41",
-          link: "#6675DF",
+          bg: "#1A0E04",
+          card: "#2A1A08",
+          input: "#3A2410",
+          border: "#4A3020",
+          text: "#F5F0EB",
+          textMuted: "#A89080",
+          textDisabled: "#7A6050",
+          accent: "#5A3A1A",
+          link: "#C88040",
         },
       },
     },
   },
-  plugins: [], // ⬅️ register daisyUI
+  plugins: [],
 };

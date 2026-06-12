@@ -1,3 +1,68 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  *:focus-visible {
+    outline: 2px solid #995F2F;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-ink {
+    @apply bg-[#995F2F] text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-[#7A4A22] active:translate-y-px transition-all shadow-sm;
+  }
+
+  .btn-ink-outline {
+    @apply border border-[#995F2F] text-[#995F2F] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#995F2F] hover:text-white transition-all;
+  }
+
+  .input-ink {
+    @apply w-full px-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] transition-all;
+  }
+}
+
+/* Tiptap editor placeholder */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #999;
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+.tiptap:focus {
+  outline: none;
+}
+.tiptap img {
+  border-radius: 8px;
+  margin: 24px 0;
+  width: 100%;
+}
+
+/* Prose overrides for blog reading */
+.inkwell-prose h1,
+.inkwell-prose h2,
+.inkwell-prose h3 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+}
+.inkwell-prose blockquote {
+  border-left: 3px solid #995F2F;
+  padding-left: 1rem;
+  font-style: italic;
+  color: #555;
+  background: #FBF7F4;
+  padding: 1rem 1.25rem;
+  border-radius: 0 6px 6px 0;
+}
+.inkwell-prose a {
+  color: #995F2F;
+  text-decoration: underline;
+}

@@ -10,10 +10,6 @@ import {
   Bookmark,
   Heart,
   MessageSquare,
-  Home,
-  Compass,
-  Bell,
-  User,
   Send,
   Edit2,
   Trash2,
@@ -34,7 +30,7 @@ interface BlogPost {
   isLiked: boolean;
   views: number;
   commentCount: number;
-  published: boolean; // ← add thi
+  published: boolean;
 }
 
 interface Comment {
@@ -58,51 +54,30 @@ const SingleBlogPage = () => {
   const [loading, setLoading] = useState(true);
   const [loadingComments, setLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState("");
-  const [editingComment, setEditingComment] = useState<{
-    id: string;
-    content: string;
-  } | null>(null);
+  const [editingComment, setEditingComment] = useState<{ id: string; content: string } | null>(null);
   const [userId] = useState("6673e9def8cc332b93206916");
   const [showComments, setShowComments] = useState(false);
   const commentsListRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!blogId) return;
-
     socket.emit("join-blog", blogId);
-
-    const handleBlogLiked = (data: {
-      blogId: string;
-      likeCount: number;
-      isLiked?: boolean;
-      title?: string;
-    }) => {
-      console.log("🔥 blog-liked received:", data);
-
+    const handleBlogLiked = (data: { blogId: string; likeCount: number; isLiked?: boolean; title?: string }) => {
       if (data.blogId === blogId) {
-        setBlog((prev) =>
-          prev
-            ? {
-              ...prev,
-              likeCount: data.likeCount,
-            }
-            : null,
-        );
+        setBlog((prev) => prev ? { ...prev, likeCount: data.likeCount } : null);
       }
     };
-
     socket.on("blog-liked", handleBlogLiked);
-
-    return () => {
-      socket.off("blog-liked", handleBlogLiked);
-    };
+    return () => { socket.off("blog-liked", handleBlogLiked); };
   }, [blogId]);
+
   useEffect(() => {
     const fetchBlog = async () => {
       try {
         setLoading(true);
         const response = await axiosInstance.get(`/blog/${blogId}`);
         setBlog(response.data.data);
-        setPublished(response.data.data?.published ?? true); // ← add this line
+        setPublished(response.data.data?.published ?? true);
       } catch (err) {
         console.error("Failed to fetch blog:", err);
       } finally {
@@ -120,13 +95,9 @@ const SingleBlogPage = () => {
         setLoadingComments(false);
       }
     };
-    if (blogId) {
-      fetchBlog();
-      fetchComments();
-    }
+    if (blogId) { fetchBlog(); fetchComments(); }
   }, [blogId]);
 
-  // Scroll comments list to bottom on new comment
   useEffect(() => {
     if (commentsListRef.current) {
       commentsListRef.current.scrollTop = commentsListRef.current.scrollHeight;
@@ -134,12 +105,7 @@ const SingleBlogPage = () => {
   }, [comments]);
 
   const handleDeleteBlog = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this blog? This cannot be undone.",
-      )
-    )
-      return;
+    if (!confirm("Are you sure you want to delete this blog? This cannot be undone.")) return;
     try {
       setDeleteLoading(true);
       await axiosInstance.delete(`/blog/${blogId}`);
@@ -167,25 +133,8 @@ const SingleBlogPage = () => {
     try {
       const response = await axiosInstance.post(`/likes/toggle/v/${blogId}`);
       const data = response.data;
-
-      setBlog((prev) =>
-        prev
-          ? {
-            ...prev,
-            likeCount: data.likeCount,
-            isLiked: data.isLiked,
-          }
-          : null,
-      );
-
-      socket.emit("like-blog", {
-        blogId,
-        likeCount: data.likeCount,
-        isLiked: data.isLiked,
-        title: data.title,
-      });
-
-      console.log("✅ like-blog emitted");
+      setBlog((prev) => prev ? { ...prev, likeCount: data.likeCount, isLiked: data.isLiked } : null);
+      socket.emit("like-blog", { blogId, likeCount: data.likeCount, isLiked: data.isLiked, title: data.title });
     } catch (err) {
       console.error("Failed to toggle like:", err);
     }
@@ -197,11 +146,7 @@ const SingleBlogPage = () => {
       setComments((prev) =>
         prev.map((c) =>
           c._id === commentId
-            ? {
-              ...c,
-              isLiked: !c.isLiked,
-              likeCount: c.isLiked ? c.likeCount - 1 : c.likeCount + 1,
-            }
+            ? { ...c, isLiked: !c.isLiked, likeCount: c.isLiked ? c.likeCount - 1 : c.likeCount + 1 }
             : c,
         ),
       );
@@ -214,17 +159,13 @@ const SingleBlogPage = () => {
     e.preventDefault();
     if (!newComment.trim()) return;
     try {
-      const response = await axiosInstance.post(`/comments/${blogId}`, {
-        content: newComment,
-      });
+      const response = await axiosInstance.post(`/comments/${blogId}`, { content: newComment });
       const newCommentData: Comment = {
         _id: response.data.data._id,
         user: {
           _id: userId,
           username: "faizal07",
-          profileImage: {
-            url: "http://res.cloudinary.com/karanshukla/image/upload/v1747733895/iqthluuhimomf15spe9w.jpg",
-          },
+          profileImage: { url: "http://res.cloudinary.com/karanshukla/image/upload/v1747733895/iqthluuhimomf15spe9w.jpg" },
         },
         content: newComment,
         createdAt: new Date().toISOString(),
@@ -242,15 +183,9 @@ const SingleBlogPage = () => {
   const editComment = async () => {
     if (!editingComment) return;
     try {
-      await axiosInstance.put(`/comments/c/${editingComment.id}`, {
-        content: editingComment.content,
-      });
+      await axiosInstance.put(`/comments/c/${editingComment.id}`, { content: editingComment.content });
       setComments((prev) =>
-        prev.map((c) =>
-          c._id === editingComment.id
-            ? { ...c, content: editingComment.content }
-            : c,
-        ),
+        prev.map((c) => c._id === editingComment.id ? { ...c, content: editingComment.content } : c),
       );
       setEditingComment(null);
     } catch (err) {
@@ -269,269 +204,280 @@ const SingleBlogPage = () => {
   };
 
   const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    new Date(dateString).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const formatLikes = (count: number) =>
     count > 1000 ? (count / 1000).toFixed(1) + "k" : count.toString();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white text-gray-500">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-3 border-[#995F2F] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!blog) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white text-red-500">
+      <div className="min-h-screen flex items-center justify-center bg-white text-gray-500">
         Blog not found
       </div>
     );
   }
-  const cleanedContent = blog.content;
+
   return (
-    <div className="min-h-screen bg-white pb-20 md:pb-0 font-sans text-gray-900">
-      <main className="max-w-4xl mx-auto">
-        {/* Action Bar — replaces floating header */}
-        <div className="mt-5  flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
+    <div className="min-h-screen bg-white font-sans text-gray-900">
+      {/* ── Action Bar ── */}
+      <div className="max-w-4xl mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-[#995F2F] transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        <div className="flex items-center gap-2">
+          <button className="p-2 hover:bg-[#F5F0EB] rounded-full transition-colors" title="Share">
+            <Share2 className="w-4 h-4 text-gray-500" />
+          </button>
+          <button className="p-2 hover:bg-[#F5F0EB] rounded-full transition-colors" title="Bookmark">
+            <Bookmark className="w-4 h-4 text-gray-500" />
           </button>
 
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <Share2 className="w-5 h-5 text-gray-600" />
+          {userId === blog?.author?._id && (
+            <>
+              <button
+                onClick={() => router.push(`/blog/edit/${blogId}`)}
+                className="p-2 hover:bg-[#F5F0EB] rounded-full transition-colors"
+                title="Edit blog"
+              >
+                <Pencil className="w-4 h-4 text-gray-500" />
+              </button>
+
+              <button
+                onClick={handleToggleStatus}
+                disabled={toggleLoading}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                  published
+                    ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                    : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
+                }`}
+              >
+                {published ? <><Eye className="w-3.5 h-3.5" /> Public</> : <><EyeOff className="w-3.5 h-3.5" /> Private</>}
+              </button>
+
+              <button
+                onClick={handleDeleteBlog}
+                disabled={deleteLoading}
+                className="p-2 hover:bg-red-50 rounded-full transition-colors"
+                title="Delete blog"
+              >
+                <Trash2 className="w-4 h-4 text-red-400" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── Cover Image ── */}
+      <div className="w-full aspect-[21/9] overflow-hidden bg-[#F5F0EB]">
+        <img
+          src={blog.coverImage.url}
+          alt={blog.title}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* ── Reading Column ── */}
+      <div className="max-w-[680px] mx-auto px-5 py-10">
+        {/* Category badge */}
+        <span className="inline-block px-3 py-1 bg-[#995F2F]/10 text-[#995F2F] text-[11px] font-black rounded-full uppercase tracking-widest mb-5">
+          Blog
+        </span>
+
+        {/* Title */}
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 leading-tight mb-4">
+          {blog.title}
+        </h1>
+
+        {/* Description */}
+        <p className="text-lg text-gray-500 leading-relaxed mb-8">
+          {blog.description}
+        </p>
+
+        {/* Author row */}
+        <div className="flex items-center gap-3 mb-8 pb-8 border-b border-[#E5E5E5]">
+          <button
+            className="w-10 h-10 rounded-full bg-[#E5E5E5] overflow-hidden flex-shrink-0 hover:ring-2 hover:ring-[#995F2F] transition-all"
+            onClick={() => router.push(`/profile/${blog.author._id}`)}
+          >
+            <img
+              src={blog.author.profileImage.url}
+              alt={blog.author.username}
+              className="w-full h-full object-cover"
+            />
+          </button>
+          <div>
+            <button
+              onClick={() => router.push(`/profile/${blog.author._id}`)}
+              className="text-sm font-bold text-gray-900 hover:text-[#995F2F] transition-colors"
+            >
+              {blog.author.username}
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <Bookmark className="w-5 h-5 text-gray-600" />
-            </button>
-
-            {userId === blog?.author?._id && (
-              <>
-                <button
-                  onClick={() => router.push(`/blog/edit/${blogId}`)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  title="Edit blog"
-                >
-                  <Pencil className="w-4 h-4 text-gray-600" />
-                </button>
-
-                <button
-                  onClick={handleToggleStatus}
-                  disabled={toggleLoading}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${published
-                      ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                      : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
-                    }`}
-                >
-                  {published ? (
-                    <>
-                      <Eye className="w-3.5 h-3.5" /> Public
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="w-3.5 h-3.5" /> Private
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={handleDeleteBlog}
-                  disabled={deleteLoading}
-                  className="p-2 hover:bg-red-50 rounded-full transition-colors"
-                  title="Delete blog"
-                >
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </button>
-              </>
-            )}
+            <p className="text-xs text-gray-400">
+              {formatDate(blog.createdAt)} · 6 min read
+            </p>
           </div>
         </div>
-        {/* Hero Image */}
-        <div className="w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden bg-gray-200">
-          <img
-            src={blog.coverImage.url}
-            alt={blog.title}
-            className="w-full h-full object-cover"
+
+        {/* Article body */}
+        <article className="mb-12">
+          <div
+            className="
+              prose prose-neutral lg:prose-lg max-w-none
+              prose-headings:font-black prose-headings:tracking-tight prose-headings:text-gray-900
+              prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+              prose-p:text-gray-700 prose-p:leading-7 prose-p:my-4
+              prose-a:text-[#995F2F] prose-a:no-underline hover:prose-a:underline
+              prose-strong:text-gray-900
+              prose-blockquote:border-l-4 prose-blockquote:border-[#995F2F]
+              prose-blockquote:pl-4 prose-blockquote:text-gray-600 prose-blockquote:italic
+              prose-blockquote:bg-[#FBF7F4] prose-blockquote:py-1 prose-blockquote:not-italic
+              prose-img:rounded-xl prose-img:shadow-sm prose-img:my-6
+              prose-ul:pl-5 prose-ol:pl-5
+              prose-li:marker:text-[#995F2F]
+              prose-code:text-[#995F2F] prose-code:bg-[#FBF7F4] prose-code:px-1 prose-code:rounded
+            "
+            dangerouslySetInnerHTML={{ __html: blog.content }}
           />
+        </article>
+
+        {/* ── Engagement Bar ── */}
+        <div className="flex items-center gap-6 py-5 border-t border-b border-[#E5E5E5] mb-10">
+          <button
+            onClick={toggleBlogLike}
+            className="flex items-center gap-2 group transition-all"
+          >
+            <Heart
+              className={`w-5 h-5 transition-all ${
+                blog.isLiked ? "text-red-500 fill-red-500 scale-110" : "text-gray-400 group-hover:text-red-400"
+              }`}
+            />
+            <span className="text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
+              {formatLikes(blog.likeCount)} Likes
+            </span>
+          </button>
+
+          <button
+            onClick={() => setShowComments((prev) => !prev)}
+            className="flex items-center gap-2 group"
+          >
+            <MessageSquare
+              className={`w-5 h-5 transition-colors ${
+                showComments ? "text-[#995F2F] fill-[#995F2F]/10" : "text-gray-400 group-hover:text-[#995F2F]"
+              }`}
+            />
+            <span className="text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
+              {blog.commentCount} Comments
+            </span>
+          </button>
         </div>
 
-        <div className="px-5 py-6 md:px-8">
-          <div className="mb-6">
-            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full uppercase tracking-wide mb-3">
-              Blog
-            </span>
-            <h1 className="text-3xl md:text-4xl font-bold leading-tight text-gray-900 mb-3">
-              {blog.title}
-            </h1>
-
-            <p className="text-lg text-gray-500 mb-5">{blog.description}</p>
-            <div className="flex items-center gap-3 mb-6">
-              <div
-                className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden"
-                onClick={() => router.push(`/profile/${blog.author._id}`)}
-              >
+        {/* ── Author card ── */}
+        <div className="rounded-2xl overflow-hidden border border-[#E5E5E5] mb-12">
+          <div className="h-24 bg-gradient-to-r from-[#995F2F] to-[#7A4A22]" />
+          <div className="px-6 pb-6 -mt-10">
+            <div className="flex items-end gap-4 mb-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-md flex-shrink-0">
                 <img
                   src={blog.author.profileImage.url}
                   alt={blog.author.username}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
-                  {blog.author.username}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {formatDate(blog.createdAt)} • 6 min read
-                </p>
+              <div className="pb-1">
+                <h3 className="font-black text-gray-900">{blog.author.username}</h3>
               </div>
             </div>
-          </div>
-
-          <article className="max-w-3xl mx-auto mb-12">
-            <div
-              className="
-                prose prose-neutral lg:prose-lg max-w-none
-                prose-headings:font-bold prose-headings:text-gray-900
-                prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-                prose-p:text-gray-700 prose-p:leading-7 prose-p:my-4
-                prose-a:text-blue-600 hover:prose-a:underline
-                prose-strong:text-gray-900
-                prose-em:text-gray-800
-                prose-blockquote:border-l-4 prose-blockquote:border-gray-300
-                prose-blockquote:pl-4 prose-blockquote:text-gray-600 prose-blockquote:italic
-                prose-img:rounded-xl prose-img:shadow-sm prose-img:my-6 prose-img:w-full prose-img:object-cover
-                prose-ul:pl-5 prose-ol:pl-5
-                prose-li:marker:text-gray-400
-              "
-              dangerouslySetInnerHTML={{
-                __html: cleanedContent,
-              }}
-            />
-          </article>
-
-          {/* Engagement Stats */}
-          <div className="flex items-center justify-between py-4 border-t border-gray-100">
-            <div className="flex items-center gap-6">
-              <button
-                onClick={toggleBlogLike}
-                className="flex items-center gap-2 group"
-              >
-                <Heart
-                  className={`w-5 h-5 transition-all ${blog.isLiked ? "text-red-500 fill-red-500" : "text-gray-400 group-hover:text-red-500"}`}
-                />
-                <span className="text-sm font-medium text-gray-600">
-                  {formatLikes(blog.likeCount)} Likes
-                </span>
-              </button>
-              <button
-                onClick={() => setShowComments((prev) => !prev)}
-                className="flex items-center gap-2 group"
-              >
-                <MessageSquare
-                  className={`w-5 h-5 transition-colors ${showComments ? "text-blue-500 fill-blue-100" : "text-gray-400 group-hover:text-blue-500"}`}
-                />
-                <span className="text-sm font-medium text-gray-600">
-                  {blog.commentCount} Comments
-                </span>
-              </button>
-            </div>
+            <button
+              onClick={() => router.push(`/profile/${blog.author._id}`)}
+              className="px-4 py-2 border border-[#995F2F] text-[#995F2F] text-sm font-bold rounded-lg hover:bg-[#995F2F] hover:text-white transition-all"
+            >
+              View Profile
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Comments Section */}
-        {showComments && (
-          <div className="px-5 py-8 md:px-8 border-t border-gray-100 bg-gray-50">
-            <div className="max-w-4xl mx-auto">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">
-                {blog.commentCount} Comments
-              </h3>
+      {/* ── Comments Section ── */}
+      {showComments && (
+        <div className="border-t border-[#E5E5E5] bg-[#FAFAFA]">
+          <div className="max-w-[680px] mx-auto px-5 py-10">
+            <h3 className="text-xl font-black text-gray-900 mb-6">
+              {blog.commentCount} Comments
+            </h3>
 
-              {/* Add New Comment Form */}
-              <form
-                onSubmit={addComment}
-                className="mb-6 p-4 bg-white rounded-xl shadow-sm border"
-              >
-                <div className="flex gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex-shrink-0">
-                    <img
-                      src="http://res.cloudinary.com/karanshukla/image/upload/v1747733895/iqthluuhimomf15spe9w.jpg"
-                      alt="User"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="flex-1 p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    rows={3}
+            {/* Add comment */}
+            <form onSubmit={addComment} className="mb-8">
+              <div className="flex gap-3 mb-3">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                  <img
+                    src="http://res.cloudinary.com/karanshukla/image/upload/v1747733895/iqthluuhimomf15spe9w.jpg"
+                    alt="User"
+                    className="w-full h-full object-cover"
                   />
                 </div>
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Write a comment..."
+                  className="flex-1 p-3 border border-[#E5E5E5] rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] transition-all bg-white text-sm"
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end">
                 <button
                   type="submit"
                   disabled={!newComment.trim()}
-                  className="ml-auto flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#995F2F] text-white text-sm font-bold rounded-lg hover:bg-[#7A4A22] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                   Comment
                 </button>
-              </form>
+              </div>
+            </form>
 
-              {/* ✅ Scrollable Comments List */}
-              {loadingComments ? (
-                <p className="text-gray-500 text-center py-8">
-                  Loading comments...
-                </p>
-              ) : comments.length === 0 ? (
-                <p className="text-gray-500 text-center py-12">
-                  No comments yet. Be the first to comment!
-                </p>
-              ) : (
-                <div
-                  ref={commentsListRef}
-                  className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-                >
-                  {comments.map((comment) => (
-                    <CommentItem
-                      key={comment._id}
-                      comment={comment}
-                      editing={editingComment?.id === comment._id}
-                      editContent={
-                        editingComment?.id === comment._id
-                          ? editingComment.content
-                          : comment.content
-                      }
-                      onEditContentChange={(content) =>
-                        setEditingComment({ id: comment._id, content })
-                      }
-                      onEdit={() =>
-                        setEditingComment({
-                          id: comment._id,
-                          content: comment.content,
-                        })
-                      }
-                      onSave={editComment}
-                      onCancel={() => setEditingComment(null)}
-                      onDelete={() => deleteComment(comment._id)}
-                      onLike={() => toggleCommentLike(comment._id)}
-                      currentUserId={userId}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Comments list */}
+            {loadingComments ? (
+              <p className="text-gray-400 text-center py-8">Loading comments...</p>
+            ) : comments.length === 0 ? (
+              <p className="text-gray-400 text-center py-12">No comments yet. Be the first!</p>
+            ) : (
+              <div
+                ref={commentsListRef}
+                className="space-y-4 max-h-[500px] overflow-y-auto pr-1"
+              >
+                {comments.map((comment) => (
+                  <CommentItem
+                    key={comment._id}
+                    comment={comment}
+                    editing={editingComment?.id === comment._id}
+                    editContent={editingComment?.id === comment._id ? editingComment.content : comment.content}
+                    onEditContentChange={(content) => setEditingComment({ id: comment._id, content })}
+                    onEdit={() => setEditingComment({ id: comment._id, content: comment.content })}
+                    onSave={editComment}
+                    onCancel={() => setEditingComment(null)}
+                    onDelete={() => deleteComment(comment._id)}
+                    onLike={() => toggleCommentLike(comment._id)}
+                    currentUserId={userId}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   );
 };
@@ -550,36 +496,19 @@ interface CommentItemProps {
 }
 
 const CommentItem = ({
-  comment,
-  editing,
-  editContent,
-  onEditContentChange,
-  onEdit,
-  onSave,
-  onCancel,
-  onDelete,
-  onLike,
-  currentUserId,
+  comment, editing, editContent, onEditContentChange,
+  onEdit, onSave, onCancel, onDelete, onLike, currentUserId,
 }: CommentItemProps) => {
   const formatTime = (dateString: string) =>
-    new Date(dateString).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    new Date(dateString).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
   const formatLikes = (count: number) =>
     count > 1000 ? (count / 1000).toFixed(1) + "k" : count.toString();
 
   return (
-    <div className="p-4 bg-white rounded-xl shadow-sm border flex gap-3">
-      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex-shrink-0">
-        <img
-          src={comment.user.profileImage.url}
-          alt={comment.user.username}
-          className="w-full h-full object-cover"
-        />
+    <div className="bg-white rounded-xl border border-[#E5E5E5] p-4 flex gap-3">
+      <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+        <img src={comment.user.profileImage.url} alt={comment.user.username} className="w-full h-full object-cover" />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -588,20 +517,14 @@ const CommentItem = ({
             <textarea
               value={editContent}
               onChange={(e) => onEditContentChange(e.target.value)}
-              className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+              className="w-full p-3 border border-[#E5E5E5] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] mb-2 text-sm"
               rows={3}
             />
             <div className="flex gap-2">
-              <button
-                onClick={onSave}
-                className="px-4 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
-              >
+              <button onClick={onSave} className="px-4 py-1.5 bg-[#995F2F] text-white text-xs font-bold rounded-lg hover:bg-[#7A4A22] transition-colors">
                 Save
               </button>
-              <button
-                onClick={onCancel}
-                className="px-4 py-1 text-gray-600 text-sm rounded-lg hover:bg-gray-100"
-              >
+              <button onClick={onCancel} className="px-4 py-1.5 text-gray-500 text-xs font-medium rounded-lg hover:bg-gray-100 transition-colors">
                 Cancel
               </button>
             </div>
@@ -609,40 +532,23 @@ const CommentItem = ({
         ) : (
           <>
             <div className="flex items-center justify-between mb-1">
-              <span className="font-semibold text-gray-900 text-sm">
-                {comment.user.username}
-              </span>
+              <span className="font-bold text-gray-900 text-sm">{comment.user.username}</span>
               {currentUserId === comment.user._id && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={onEdit}
-                    className="p-1 hover:bg-gray-100 rounded-full"
-                  >
-                    {" "}
-                    {/* ✅ Fixed: was missing onClick */}
-                    <Edit2 className="w-4 h-4 text-gray-600" />
+                <div className="flex items-center gap-1">
+                  <button onClick={onEdit} className="p-1 hover:bg-gray-100 rounded-full">
+                    <Edit2 className="w-3.5 h-3.5 text-gray-400" />
                   </button>
-                  <button
-                    onClick={onDelete}
-                    className="p-1 hover:bg-gray-100 rounded-full"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600" />
+                  <button onClick={onDelete} className="p-1 hover:bg-red-50 rounded-full">
+                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
                   </button>
                 </div>
               )}
             </div>
-            <p className="text-sm text-gray-900 leading-relaxed mb-3">
-              {comment.content}
-            </p>
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            <p className="text-sm text-gray-700 leading-relaxed mb-3">{comment.content}</p>
+            <div className="flex items-center gap-4 text-xs text-gray-400">
               <span>{formatTime(comment.createdAt)}</span>
-              <button
-                onClick={onLike}
-                className="flex items-center gap-1 hover:text-gray-900 group"
-              >
-                <Heart
-                  className={`w-4 h-4 ${comment.isLiked ? "text-red-500 fill-red-500" : "text-gray-500 group-hover:text-red-500"}`}
-                />
+              <button onClick={onLike} className="flex items-center gap-1 hover:text-[#995F2F] transition-colors group">
+                <Heart className={`w-3.5 h-3.5 ${comment.isLiked ? "text-red-500 fill-red-500" : "group-hover:text-red-400"}`} />
                 <span>{formatLikes(comment.likeCount)}</span>
               </button>
             </div>
@@ -652,14 +558,5 @@ const CommentItem = ({
     </div>
   );
 };
-
-const NavIcon = ({ Icon, label, active }: any) => (
-  <button
-    className={`flex flex-col items-center gap-1 ${active ? "text-blue-700" : "text-gray-400 hover:text-gray-600"}`}
-  >
-    <Icon className="w-6 h-6" strokeWidth={active ? 2.5 : 2} />
-    <span className="text-[10px] font-medium">{label}</span>
-  </button>
-);
 
 export default SingleBlogPage;
