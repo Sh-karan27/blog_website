@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -8,22 +8,22 @@
   }
 
   *:focus-visible {
-    outline: 2px solid #995F2F;
+    outline: 2px solid #985F2E;
     outline-offset: 2px;
   }
 }
 
 @layer components {
   .btn-ink {
-    @apply bg-[#995F2F] text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-[#7A4A22] active:translate-y-px transition-all shadow-sm;
+    @apply bg-[#985F2E] text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-[#7A4A22] active:translate-y-px transition-all shadow-sm;
   }
 
   .btn-ink-outline {
-    @apply border border-[#995F2F] text-[#995F2F] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#995F2F] hover:text-white transition-all;
+    @apply border border-[#985F2E] text-[#985F2E] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#985F2E] hover:text-white transition-all;
   }
 
   .input-ink {
-    @apply w-full px-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] transition-all;
+    @apply w-full px-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#985F2E]/30 focus:border-[#985F2E] transition-all;
   }
 }
 
@@ -54,7 +54,7 @@
   color: #111;
 }
 .inkwell-prose blockquote {
-  border-left: 3px solid #995F2F;
+  border-left: 3px solid #985F2E;
   padding-left: 1rem;
   font-style: italic;
   color: #555;
@@ -63,6 +63,6 @@
   border-radius: 0 6px 6px 0;
 }
 .inkwell-prose a {
-  color: #995F2F;
+  color: #985F2E;
   text-decoration: underline;
 }

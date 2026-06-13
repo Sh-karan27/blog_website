@@ -1,77 +1,139 @@
-import React from "react";
+﻿"use client";
 
-const InkDrop = () => (
-  <svg className="w-5 h-5 text-[#995F2F]" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2C12 2 4 10.5 4 15a8 8 0 0016 0C20 10.5 12 2 12 2z" />
-  </svg>
-);
+import React, { useState } from "react";
+import Link from "next/link";
 
-const Footer = () => {
+const T = {
+  accent:      "#985F2E",
+  accentHover: "#7A4A22",
+  surface:     "#FFFFFF",
+  text2:       "#1A1A1A",
+  muted:       "#666666",
+  border:      "#E5E5E5",
+  borderStrong:"#CCCCCC",
+};
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const [hovered, setHovered] = useState(false);
+  const isExternal = href === "#";
+  return isExternal ? (
+    <a
+      href={href}
+      style={{ fontSize: 14, color: hovered ? T.accent : T.text2, textDecoration: "none", transition: "color 0.15s" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </a>
+  ) : (
+    <Link
+      href={href}
+      style={{ fontSize: 14, color: hovered ? T.accent : T.text2, textDecoration: "none", transition: "color 0.15s" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </Link>
+  );
+}
+
+export default function Footer() {
   return (
-    <footer className="bg-[#1A0E04] text-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <InkDrop />
-              <span className="text-xl font-black tracking-tighter">Inkwell</span>
-            </div>
-            <p className="text-[#A89080] text-sm leading-relaxed max-w-xs">
-              A thoughtful space for long-form writing, deep reading, and meaningful ideas worth sharing.
+    <footer style={{ background: T.surface, borderTop: `1px solid ${T.border}`, paddingTop: 64, paddingBottom: 32 }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+
+        {/* 4-column grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 48 }} className="max-md:grid-cols-2 max-md:gap-8">
+
+          {/* Brand + newsletter */}
+          <div>
+            <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: T.accent }}>
+              <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                <path d="M14 2C14 2 23 11 23 17.5C23 22.1 19 25.5 14 25.5C9 25.5 5 22.1 5 17.5C5 11 14 2 14 2Z" fill="#985F2E" />
+                <path d="M14 12C14 12 17.5 15.5 17.5 18C17.5 19.9 15.9 21 14 21C12.1 21 10.5 19.9 10.5 18C10.5 15.5 14 12 14 12Z" fill="#985F2E" fillOpacity="0.32" />
+              </svg>
+              Inkwell
+            </Link>
+            <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.7, marginTop: 10, maxWidth: 260 }}>
+              Write. Connect. Be Read. A modern platform for writers who mean business and readers who seek depth.
             </p>
+            <NewsletterForm />
           </div>
 
-          {/* Platform links */}
+          {/* Platform */}
           <div>
-            <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#A89080] mb-5">Platform</h4>
-            <ul className="space-y-3">
-              {["Home", "Articles", "Write", "About"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-sm text-white/50 hover:text-white transition-colors">
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: T.muted, marginBottom: 14 }}>Platform</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <FooterLink href="/">Home</FooterLink>
+              <FooterLink href="/articles">Articles</FooterLink>
+              <FooterLink href="/write">Write a Story</FooterLink>
+              <FooterLink href="#">Explore Authors</FooterLink>
+              <FooterLink href="#">Topics</FooterLink>
+            </div>
           </div>
 
-          {/* Company links */}
+          {/* Legal */}
           <div>
-            <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#A89080] mb-5">Company</h4>
-            <ul className="space-y-3">
-              {["Privacy Policy", "Terms of Service", "Contact Us"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-sm text-white/50 hover:text-white transition-colors">
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: T.muted, marginBottom: 14 }}>Legal</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <FooterLink href="#">Privacy Policy</FooterLink>
+              <FooterLink href="#">Terms of Service</FooterLink>
+              <FooterLink href="#">Cookie Policy</FooterLink>
+              <FooterLink href="#">DMCA</FooterLink>
+            </div>
+          </div>
+
+          {/* Social */}
+          <div>
+            <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: T.muted, marginBottom: 14 }}>Social</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <FooterLink href="#">Twitter / X</FooterLink>
+              <FooterLink href="#">GitHub</FooterLink>
+              <FooterLink href="#">LinkedIn</FooterLink>
+              <FooterLink href="#">Discord</FooterLink>
+              <FooterLink href="#">RSS Feed</FooterLink>
+            </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-[#A89080]">© 2024 Inkwell. All rights reserved.</p>
-          <div className="flex gap-4">
-            {/* Twitter */}
-            <a href="#" className="text-[#A89080] hover:text-white transition-colors">
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M22.46 6.54c-.81.36-1.68.61-2.59.71a4.54 4.54 0 001.99-2.5 9.17 9.17 0 01-2.86 1.09 4.52 4.52 0 00-7.7 4.12A12.83 12.83 0 013.32 5.09a4.51 4.51 0 001.4 6.02 4.49 4.49 0 01-2.05-.57v.06a4.52 4.52 0 003.63 4.44c-.67.18-1.38.21-2.05.08a4.53 4.53 0 004.23 3.14 9.07 9.07 0 01-6.61 2.21A12.77 12.77 0 0019.5 8.29c0-.19 0-.38-.01-.57.86-.62 1.6-1.4 2.19-2.28z" />
-              </svg>
-            </a>
-            {/* LinkedIn */}
-            <a href="#" className="text-[#A89080] hover:text-white transition-colors">
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-              </svg>
-            </a>
-          </div>
+        <div style={{ paddingTop: 28, borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 13, color: T.muted }}>
+          <span>© 2026 Inkwell. All rights reserved.</span>
+          <span className="hidden sm:inline">Made with care for writers everywhere.</span>
         </div>
       </div>
     </footer>
   );
-};
+}
 
-export default Footer;
+function NewsletterForm() {
+  const [email, setEmail] = useState("");
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+      <input
+        type="email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="Your email"
+        aria-label="Newsletter email"
+        style={{
+          flex: 1, padding: "8px 12px", border: `1.5px solid ${focused ? T.accent : T.border}`,
+          borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none",
+          background: T.surface, color: "#000000", transition: "border-color 0.15s",
+          boxShadow: focused ? "0 0 0 3px rgba(152,95,46,0.12)" : "none",
+        }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+      <button
+        style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600, background: T.accent, color: "white", border: "none", cursor: "pointer", transition: "background 0.15s", whiteSpace: "nowrap" }}
+        onMouseEnter={e => (e.currentTarget.style.background = T.accentHover)}
+        onMouseLeave={e => (e.currentTarget.style.background = T.accent)}
+      >
+        Subscribe
+      </button>
+    </div>
+  );
+}

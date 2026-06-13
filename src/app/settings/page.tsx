@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import axiosInstance from "@/lib/axios";
 import { useEffect, useRef, useState } from "react";
@@ -124,12 +124,12 @@ const SettingsPage = () => {
     }
   };
 
-  const inputClass = `w-full px-4 py-3 border border-[#E5E5E5] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] transition-all`;
+  const inputClass = `w-full px-4 py-3 border border-[#E5E5E5] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#985F2E]/30 focus:border-[#985F2E] transition-all`;
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
-        <div className="w-8 h-8 border-2 border-[#995F2F] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#985F2E] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -149,7 +149,7 @@ const SettingsPage = () => {
         {user.coverImage?.url ? (
           <img src={user.coverImage.url} alt="Cover" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-[#995F2F] to-[#7A4A22]" />
+          <div className="w-full h-full bg-gradient-to-r from-[#985F2E] to-[#7A4A22]" />
         )}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
         <button
@@ -171,7 +171,7 @@ const SettingsPage = () => {
               {user.profileImage?.url ? (
                 <img src={user.profileImage.url} alt={user.username} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#995F2F] to-[#7A4A22] flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-full h-full bg-gradient-to-br from-[#985F2E] to-[#7A4A22] flex items-center justify-center text-white text-2xl font-bold">
                   {user.username?.[0]?.toUpperCase()}
                 </div>
               )}
@@ -205,7 +205,7 @@ const SettingsPage = () => {
             { value: new Date(user.createdAt).getFullYear(), label: "Member since" },
           ].map((s) => (
             <div key={s.label} className="text-center">
-              <div className="text-lg font-black text-[#995F2F]">{s.value}</div>
+              <div className="text-lg font-black text-[#985F2E]">{s.value}</div>
               <div className="text-xs text-gray-400 font-medium">{s.label}</div>
             </div>
           ))}
@@ -263,7 +263,7 @@ const SettingsPage = () => {
               <button
                 onClick={handleSaveDetails}
                 disabled={savingDetails}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#995F2F] text-white text-sm font-bold rounded-xl hover:bg-[#7A4A22] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#985F2E] text-white text-sm font-bold rounded-xl hover:bg-[#7A4A22] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {savingDetails ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
                 {savingDetails ? "Saving..." : "Save Changes"}
@@ -336,7 +336,7 @@ const SettingsPage = () => {
               <button
                 onClick={handleChangePassword}
                 disabled={savingPassword || (!!confirmPassword && newPassword !== confirmPassword)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#995F2F] text-white text-sm font-bold rounded-xl hover:bg-[#7A4A22] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#985F2E] text-white text-sm font-bold rounded-xl hover:bg-[#7A4A22] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {savingPassword ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Lock className="w-4 h-4" />}
                 {savingPassword ? "Updating..." : "Update Password"}

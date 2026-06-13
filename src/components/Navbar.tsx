@@ -12,6 +12,7 @@ const InkDrop = ({ className }: { className?: string }) => (
 const Navbar = () => {
   const router = useRouter();
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,7 +21,9 @@ const Navbar = () => {
   useEffect(() => {
     setMounted(true);
     const storedImage = localStorage.getItem("profileImage");
+    const storedUserId = localStorage.getItem("userId");
     if (storedImage) setProfileImage(storedImage);
+    if (storedUserId) setUserId(storedUserId);
   }, []);
 
   useEffect(() => {
@@ -43,6 +46,7 @@ const Navbar = () => {
       await axiosInstance.post("/users/logout");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("userId");
       router.push("/login");
       window.location.reload();
     } catch (error) {
@@ -50,11 +54,19 @@ const Navbar = () => {
     }
   };
 
+  const profileHref = userId ? `/profile/${userId}` : "/settings";
+
+  const navLinks = [
+    { label: "Home", href: "/" },
+    { label: "My Profile", href: profileHref },
+    { label: "Settings", href: "/settings" },
+  ];
+
   if (!mounted) return null;
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 bg-[#995F2F] shadow-md">
+      <header className="fixed top-0 w-full z-50 bg-[#985F2E] shadow-md">
         <div className="flex justify-between items-center px-4 sm:px-8 h-16 max-w-screen-2xl mx-auto">
 
           {/* Left: Logo + Nav */}
@@ -68,12 +80,7 @@ const Navbar = () => {
             </div>
 
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              {[
-                { label: "Home", href: "/" },
-                { label: "Articles", href: "/articles" },
-                { label: "About", href: "/about" },
-                { label: "Contact", href: "/contact" },
-              ].map((item) => (
+              {navLinks.map((item) => (
                 <a
                   key={item.label}
                   href={item.href}
@@ -89,7 +96,7 @@ const Navbar = () => {
           <div className="flex items-center gap-3 flex-shrink-0">
             <button
               onClick={() => router.push("/write")}
-              className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-white text-[#995F2F] text-sm font-bold rounded-lg hover:bg-[#F5F0EB] transition-colors"
+              className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-white text-[#985F2E] text-sm font-bold rounded-lg hover:bg-[#F5F0EB] transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -113,7 +120,7 @@ const Navbar = () => {
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl z-50 py-1 border border-[#E5E5E5] overflow-hidden">
                   <button
-                    onClick={() => { router.push("/profile"); setDropdownOpen(false); }}
+                    onClick={() => { router.push(profileHref); setDropdownOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-[#F5F5F5] transition-colors"
                   >
                     Profile
@@ -161,7 +168,7 @@ const Navbar = () => {
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => { router.push("/"); setMenuOpen(false); }}
           >
-            <InkDrop className="w-6 h-6 text-[#995F2F]" />
+            <InkDrop className="w-6 h-6 text-[#985F2E]" />
             <span className="text-xl font-black tracking-tighter text-white">Inkwell</span>
           </div>
           <button
@@ -180,10 +187,9 @@ const Navbar = () => {
         <nav className="flex flex-col px-6 pt-8 flex-1">
           {[
             { label: "Home", href: "/" },
-            { label: "Articles", href: "/articles" },
             { label: "Write", href: "/write" },
-            { label: "About", href: "/about" },
-            { label: "Contact", href: "/contact" },
+            { label: "My Profile", href: profileHref },
+            { label: "Settings", href: "/settings" },
           ].map((item, i) => (
             <a
               key={item.label}
@@ -199,18 +205,6 @@ const Navbar = () => {
 
         {/* Bottom actions */}
         <div className="px-6 py-8 border-t border-white/10 flex flex-col gap-2">
-          <button
-            onClick={() => { router.push("/profile"); setMenuOpen(false); }}
-            className="w-full text-left text-white/60 text-sm hover:text-white transition-colors py-2"
-          >
-            Profile
-          </button>
-          <button
-            onClick={() => { router.push("/settings"); setMenuOpen(false); }}
-            className="w-full text-left text-white/60 text-sm hover:text-white transition-colors py-2"
-          >
-            Settings
-          </button>
           <button
             onClick={logoutUser}
             className="w-full text-left text-red-400 text-sm hover:text-red-300 transition-colors py-2"

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -122,7 +122,7 @@ export default function WritePage() {
   const removeTag = (index: number) => setTags(tags.filter((_, i) => i !== index));
 
   const toolbarBtn = (active: boolean) =>
-    `p-2 rounded-md transition-all ${active ? "bg-[#995F2F] text-white" : "text-gray-300 hover:text-white hover:bg-white/10"}`;
+    `p-2 rounded-md transition-all ${active ? "bg-[#985F2E] text-white" : "text-gray-300 hover:text-white hover:bg-white/10"}`;
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -150,7 +150,7 @@ export default function WritePage() {
             <button
               onClick={handlePublish}
               disabled={isPublishing}
-              className="px-5 py-1.5 bg-[#995F2F] text-white text-sm font-bold rounded-lg hover:bg-[#7A4A22] disabled:opacity-50 transition-all flex items-center gap-2"
+              className="px-5 py-1.5 bg-[#985F2E] text-white text-sm font-bold rounded-lg hover:bg-[#7A4A22] disabled:opacity-50 transition-all flex items-center gap-2"
             >
               {isPublishing ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -164,7 +164,7 @@ export default function WritePage() {
       {/* ── Cover Image Zone ── */}
       <div
         className="w-full cursor-pointer relative overflow-hidden group"
-        style={{ backgroundColor: "#995F2F", minHeight: "220px" }}
+        style={{ backgroundColor: "#985F2E", minHeight: "220px" }}
         onClick={() => fileInputRef.current?.click()}
       >
         {coverImage ? (
@@ -231,12 +231,12 @@ export default function WritePage() {
           {tags.map((tag, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F0EB] text-[#995F2F] text-xs font-bold rounded-full"
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F0EB] text-[#985F2E] text-xs font-bold rounded-full"
             >
               {tag}
               <button
                 onClick={() => removeTag(i)}
-                className="text-[#995F2F]/60 hover:text-[#995F2F] transition-colors leading-none"
+                className="text-[#985F2E]/60 hover:text-[#985F2E] transition-colors leading-none"
               >
                 ×
               </button>
@@ -283,7 +283,7 @@ export default function WritePage() {
           >
             <FiImage size={15} />
             {contentImages.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#995F2F] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#985F2E] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                 {contentImages.length}
               </span>
             )}

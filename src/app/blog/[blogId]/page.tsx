@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -212,7 +212,7 @@ const SingleBlogPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-3 border-[#995F2F] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-[#985F2E] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -231,7 +231,7 @@ const SingleBlogPage = () => {
       <div className="max-w-4xl mx-auto px-5 pt-6 pb-4 flex items-center justify-between">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-[#995F2F] transition-colors"
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-[#985F2E] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -292,7 +292,7 @@ const SingleBlogPage = () => {
       {/* ── Reading Column ── */}
       <div className="max-w-[680px] mx-auto px-5 py-10">
         {/* Category badge */}
-        <span className="inline-block px-3 py-1 bg-[#995F2F]/10 text-[#995F2F] text-[11px] font-black rounded-full uppercase tracking-widest mb-5">
+        <span className="inline-block px-3 py-1 bg-[#985F2E]/10 text-[#985F2E] text-[11px] font-black rounded-full uppercase tracking-widest mb-5">
           Blog
         </span>
 
@@ -309,7 +309,7 @@ const SingleBlogPage = () => {
         {/* Author row */}
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-[#E5E5E5]">
           <button
-            className="w-10 h-10 rounded-full bg-[#E5E5E5] overflow-hidden flex-shrink-0 hover:ring-2 hover:ring-[#995F2F] transition-all"
+            className="w-10 h-10 rounded-full bg-[#E5E5E5] overflow-hidden flex-shrink-0 hover:ring-2 hover:ring-[#985F2E] transition-all"
             onClick={() => router.push(`/profile/${blog.author._id}`)}
           >
             <img
@@ -321,7 +321,7 @@ const SingleBlogPage = () => {
           <div>
             <button
               onClick={() => router.push(`/profile/${blog.author._id}`)}
-              className="text-sm font-bold text-gray-900 hover:text-[#995F2F] transition-colors"
+              className="text-sm font-bold text-gray-900 hover:text-[#985F2E] transition-colors"
             >
               {blog.author.username}
             </button>
@@ -339,15 +339,15 @@ const SingleBlogPage = () => {
               prose-headings:font-black prose-headings:tracking-tight prose-headings:text-gray-900
               prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
               prose-p:text-gray-700 prose-p:leading-7 prose-p:my-4
-              prose-a:text-[#995F2F] prose-a:no-underline hover:prose-a:underline
+              prose-a:text-[#985F2E] prose-a:no-underline hover:prose-a:underline
               prose-strong:text-gray-900
-              prose-blockquote:border-l-4 prose-blockquote:border-[#995F2F]
+              prose-blockquote:border-l-4 prose-blockquote:border-[#985F2E]
               prose-blockquote:pl-4 prose-blockquote:text-gray-600 prose-blockquote:italic
               prose-blockquote:bg-[#FBF7F4] prose-blockquote:py-1 prose-blockquote:not-italic
               prose-img:rounded-xl prose-img:shadow-sm prose-img:my-6
               prose-ul:pl-5 prose-ol:pl-5
-              prose-li:marker:text-[#995F2F]
-              prose-code:text-[#995F2F] prose-code:bg-[#FBF7F4] prose-code:px-1 prose-code:rounded
+              prose-li:marker:text-[#985F2E]
+              prose-code:text-[#985F2E] prose-code:bg-[#FBF7F4] prose-code:px-1 prose-code:rounded
             "
             dangerouslySetInnerHTML={{ __html: blog.content }}
           />
@@ -375,7 +375,7 @@ const SingleBlogPage = () => {
           >
             <MessageSquare
               className={`w-5 h-5 transition-colors ${
-                showComments ? "text-[#995F2F] fill-[#995F2F]/10" : "text-gray-400 group-hover:text-[#995F2F]"
+                showComments ? "text-[#985F2E] fill-[#985F2E]/10" : "text-gray-400 group-hover:text-[#985F2E]"
               }`}
             />
             <span className="text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
@@ -386,7 +386,7 @@ const SingleBlogPage = () => {
 
         {/* ── Author card ── */}
         <div className="rounded-2xl overflow-hidden border border-[#E5E5E5] mb-12">
-          <div className="h-24 bg-gradient-to-r from-[#995F2F] to-[#7A4A22]" />
+          <div className="h-24 bg-gradient-to-r from-[#985F2E] to-[#7A4A22]" />
           <div className="px-6 pb-6 -mt-10">
             <div className="flex items-end gap-4 mb-4">
               <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-md flex-shrink-0">
@@ -402,7 +402,7 @@ const SingleBlogPage = () => {
             </div>
             <button
               onClick={() => router.push(`/profile/${blog.author._id}`)}
-              className="px-4 py-2 border border-[#995F2F] text-[#995F2F] text-sm font-bold rounded-lg hover:bg-[#995F2F] hover:text-white transition-all"
+              className="px-4 py-2 border border-[#985F2E] text-[#985F2E] text-sm font-bold rounded-lg hover:bg-[#985F2E] hover:text-white transition-all"
             >
               View Profile
             </button>
@@ -432,7 +432,7 @@ const SingleBlogPage = () => {
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Write a comment..."
-                  className="flex-1 p-3 border border-[#E5E5E5] rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] transition-all bg-white text-sm"
+                  className="flex-1 p-3 border border-[#E5E5E5] rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#985F2E]/30 focus:border-[#985F2E] transition-all bg-white text-sm"
                   rows={3}
                 />
               </div>
@@ -440,7 +440,7 @@ const SingleBlogPage = () => {
                 <button
                   type="submit"
                   disabled={!newComment.trim()}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#995F2F] text-white text-sm font-bold rounded-lg hover:bg-[#7A4A22] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#985F2E] text-white text-sm font-bold rounded-lg hover:bg-[#7A4A22] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   <Send className="w-3.5 h-3.5" />
                   Comment
@@ -517,11 +517,11 @@ const CommentItem = ({
             <textarea
               value={editContent}
               onChange={(e) => onEditContentChange(e.target.value)}
-              className="w-full p-3 border border-[#E5E5E5] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] mb-2 text-sm"
+              className="w-full p-3 border border-[#E5E5E5] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#985F2E]/30 focus:border-[#985F2E] mb-2 text-sm"
               rows={3}
             />
             <div className="flex gap-2">
-              <button onClick={onSave} className="px-4 py-1.5 bg-[#995F2F] text-white text-xs font-bold rounded-lg hover:bg-[#7A4A22] transition-colors">
+              <button onClick={onSave} className="px-4 py-1.5 bg-[#985F2E] text-white text-xs font-bold rounded-lg hover:bg-[#7A4A22] transition-colors">
                 Save
               </button>
               <button onClick={onCancel} className="px-4 py-1.5 text-gray-500 text-xs font-medium rounded-lg hover:bg-gray-100 transition-colors">
@@ -547,7 +547,7 @@ const CommentItem = ({
             <p className="text-sm text-gray-700 leading-relaxed mb-3">{comment.content}</p>
             <div className="flex items-center gap-4 text-xs text-gray-400">
               <span>{formatTime(comment.createdAt)}</span>
-              <button onClick={onLike} className="flex items-center gap-1 hover:text-[#995F2F] transition-colors group">
+              <button onClick={onLike} className="flex items-center gap-1 hover:text-[#985F2E] transition-colors group">
                 <Heart className={`w-3.5 h-3.5 ${comment.isLiked ? "text-red-500 fill-red-500" : "group-hover:text-red-400"}`} />
                 <span>{formatLikes(comment.likeCount)}</span>
               </button>

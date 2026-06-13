@@ -1,37 +1,69 @@
+﻿"use client";
+
 import axiosInstance from "@/lib/axios";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
+/* ── design tokens ── */
+const T = {
+  accent:      "#985F2E",
+  accentHover: "#7A4A22",
+  accentDim:   "rgba(152,95,46,0.1)",
+  accentDim2:  "rgba(152,95,46,0.18)",
+  secondary:   "#7A4A22",
+  bg:          "#FFFFFF",
+  surface:     "#FFFFFF",
+  surfaceAlt:  "#F5F5F5",
+  text:        "#000000",
+  text2:       "#1A1A1A",
+  muted:       "#666666",
+  border:      "#E5E5E5",
+  borderStrong:"#CCCCCC",
+  success:     "#22C55E",
+  shSm:        "0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04)",
+  shMd:        "0 4px 12px rgba(0,0,0,0.09),0 2px 4px rgba(0,0,0,0.04)",
+};
+
 const AVATAR_COLORS = [
-  "linear-gradient(135deg,#7A4A22,#5A3820)",
-  "linear-gradient(135deg,#7A4A22,#995F2F)",
-  "#8B5CF6",
-  "#F59E0B",
-  "#14B8A6",
-  "#EC4899",
-  "#3B82F6",
-  "#22C55E",
+  "linear-gradient(135deg,#7A4A22,#5C3518)",
+  "linear-gradient(135deg,#7A4A22,#985F2E)",
+  "#8B5CF6","#F59E0B","#14B8A6","#EC4899","#3B82F6","#22C55E",
+];
+function getAvatarColor(s: string) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+function initials(u: string) { return (u || "??").slice(0, 2).toUpperCase(); }
+
+const TAG_COLORS: Record<string, { bg: string; color: string; border: string }> = {
+  design:      { bg: T.accentDim,  color: T.accent,   border: "rgba(152,95,46,0.2)" },
+  technology:  { bg: T.accentDim,  color: T.accent,   border: "rgba(152,95,46,0.2)" },
+  development: { bg: "rgba(122,74,34,0.1)", color: T.secondary, border: "rgba(122,74,34,0.2)" },
+  career:      { bg: "rgba(34,197,94,0.1)",  color: "#22C55E",  border: "rgba(34,197,94,0.2)" },
+  "open source":{ bg:"rgba(34,197,94,0.1)", color: "#22C55E",  border: "rgba(34,197,94,0.2)" },
+  ai:          { bg: "rgba(139,92,246,0.1)", color: "#8B5CF6",  border: "rgba(139,92,246,0.2)" },
+  startup:     { bg: "rgba(245,158,11,0.1)", color: "#F59E0B",  border: "rgba(245,158,11,0.2)" },
+};
+function tagStyle(tag?: string) {
+  const key = (tag || "").toLowerCase();
+  return TAG_COLORS[key] ?? { bg: T.surfaceAlt, color: T.muted, border: T.border };
+}
+
+const TOPICS = [
+  "Technology","Design","Development","Productivity","Startup",
+  "AI & ML","Career","Open Source","Writing","Philosophy",
+  "Science","Finance","Data Science","DevOps","UX Research","Leadership",
 ];
 
-function getAvatarColor(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
-function getInitials(username: string) {
-  return (username || "??").slice(0, 2).toUpperCase();
-}
-
-function HeartIcon() {
+function HeartSVG() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13 }}>
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   );
 }
-
-function CommentIcon() {
+function CommentSVG() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13 }}>
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -39,377 +71,201 @@ function CommentIcon() {
   );
 }
 
-const TOPICS = [
-  "Technology", "Design", "Development", "Productivity", "Startup",
-  "AI & ML", "Career", "Open Source", "Writing", "Philosophy",
-  "Science", "Finance", "Data Science", "DevOps", "UX Research", "Leadership",
-];
+function Avatar({ user, size = 28, fontSize = 10 }: { user: any; size?: number; fontSize?: number }) {
+  return (
+    <div
+      style={{
+        width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: getAvatarColor(user?.username || ""),
+        color: "white", fontWeight: 800, fontSize,
+      }}
+    >
+      {user?.profileImage?.url
+        ? <img src={user.profileImage.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        : initials(user?.username || "")}
+    </div>
+  );
+}
 
-const HomeContent = () => {
+export default function HomeContent() {
   const [blogs, setBlogs] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
-
-  const getBlogs = async (
-    page: number = 1,
-    query: string = "a",
-    sortBy?: string,
-    sortType?: "asc" | "desc",
-  ) => {
-    try {
-      const params: any = { page, limit: 10 };
-      if (query) params.query = query;
-      if (sortBy) params.sortBy = sortBy;
-      if (sortType) params.sortType = sortType;
-      const res = await axiosInstance.get("/blog", { params });
-      return res.data;
-    } catch (err: any) {
-      console.error("Error fetching blogs:", err.response?.data || err.message);
-      throw err;
-    }
-  };
 
   useEffect(() => {
     (async () => {
       try {
-        const response = await getBlogs();
-        if (response?.statusCode === 200) {
-          setBlogs(response.data);
-          setHasMore(response?.hasMore);
+        const res = await axiosInstance.get("/blog", { params: { page: 1, limit: 10, query: "a" } });
+        if (res.data?.statusCode === 200) {
+          setBlogs(res.data.data);
+          setHasMore(res.data.hasMore);
         }
-      } catch (err) {
-        console.error("Failed to load blogs", err);
-      }
+      } catch {}
     })();
   }, []);
 
   const featured = blogs[0];
-  const trending = blogs.slice(0, 5);
-  const recent = blogs.slice(1);
+  const trending  = blogs.slice(0, 5);
+  const recent    = blogs.slice(1);
 
-  // Deduplicate authors from the blogs list
   const authorMap = new Map<string, any>();
   blogs.forEach((b) => {
-    const a = b.authorDetails;
-    if (!a) return;
+    const a = b.authorDetails; if (!a) return;
     const key = a._id || a.username;
-    if (!authorMap.has(key)) {
-      authorMap.set(key, { ...a, blogCount: 0, likeTotal: 0 });
-    }
-    const entry = authorMap.get(key);
-    if (entry) { entry.blogCount++; entry.likeTotal += b.likeCount || 0; }
+    if (!authorMap.has(key)) authorMap.set(key, { ...a, blogCount: 0, likeTotal: 0 });
+    const e = authorMap.get(key);
+    if (e) { e.blogCount++; e.likeTotal += b.likeCount || 0; }
   });
   const authors = Array.from(authorMap.values()).slice(0, 4);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div style={{ background: T.bg, color: T.text, minHeight: "100vh" }}>
 
-      {/* ══════════════ HERO ══════════════ */}
+      {/* ══════════ HERO ══════════ */}
       <section
-        className="relative overflow-hidden flex items-end"
-        style={{ minHeight: 540 }}
+        style={{ background: "linear-gradient(135deg,#FDF6F0 0%,#FBF0E8 60%,#FDF4EE 100%)", borderBottom: `1px solid ${T.border}` }}
         aria-label="Featured article"
       >
-        <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(135deg, #995F2F 0%, #7A4A22 45%, #995F2F 100%)" }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "repeating-linear-gradient(-45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 16px)",
-          }}
-        />
-        <div className="absolute inset-0" style={{ background: "rgba(26,14,4,0.62)" }} />
-
-        {featured?.coverImage?.url && (
-          <div
-            className="absolute right-16 top-1/2 -translate-y-1/2 hidden lg:block rounded-xl overflow-hidden"
-            style={{ width: 300, height: 200, opacity: 0.55, border: "1px solid rgba(153,95,47,0.12)" }}
-            aria-hidden="true"
-          >
-            <img src={featured.coverImage.url} alt="" className="w-full h-full object-cover" />
-          </div>
-        )}
-
-        <div
-          className="relative z-10 w-full max-w-screen-2xl mx-auto px-6"
-          style={{ paddingBottom: 64, paddingTop: 96 }}
-        >
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 24px" }}>
           {featured ? (
-            <>
-              <div className="flex items-center gap-3 mb-[18px]">
-                {featured.tag?.[0] && (
-                  <span
-                    className="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider text-white"
-                    style={{ background: "rgba(153,95,47,0.85)" }}
-                  >
-                    {featured.tag[0]}
-                  </span>
-                )}
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>8 min read</span>
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Featured</span>
-              </div>
-
-              <h1
-                className="font-black text-white"
-                style={{
-                  fontSize: "clamp(30px, 3.8vw, 52px)",
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1.08,
-                  maxWidth: 580,
-                  marginBottom: 18,
-                  textWrap: "pretty" as any,
-                }}
-              >
-                {featured.title}
-              </h1>
-
-              {featured.description && (
-                <p style={{ fontSize: 16, color: "rgba(255,255,255,0.68)", maxWidth: 460, lineHeight: 1.75, marginBottom: 28 }}>
-                  {featured.description}
-                </p>
-              )}
-
-              <div className="flex items-center gap-3.5 mb-7" style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
-                <div className="flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.88)", fontWeight: 500 }}>
-                  <div
-                    className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                    style={{ background: getAvatarColor(featured.authorDetails?.username || "") }}
-                  >
-                    {featured.authorDetails?.profileImage?.url ? (
-                      <img src={featured.authorDetails.profileImage.url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      getInitials(featured.authorDetails?.username || "")
-                    )}
-                  </div>
-                  {featured.authorDetails?.username}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }} className="max-lg:grid-cols-1">
+              {/* Left: text */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  {featured.tag?.[0] && (
+                    <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: 9999, fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" as const, background: T.accentDim, color: T.accent, border: "1px solid rgba(152,95,46,0.2)" }}>
+                      {featured.tag[0]}
+                    </span>
+                  )}
+                  <span style={{ fontSize: 12, color: T.muted, fontWeight: 500 }}>Featured</span>
                 </div>
-                <span>·</span>
-                <span>
-                  {new Date(featured.createdAt).toLocaleDateString("en-US", {
-                    month: "long", day: "numeric", year: "numeric",
-                  })}
-                </span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <HeartIcon />
-                  {featured.likeCount ?? 0}
-                </span>
+
+                <h1 style={{ fontSize: "clamp(28px,3.4vw,48px)", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.1, color: T.text, marginBottom: 16 }}>
+                  {featured.title}
+                </h1>
+
+                {featured.description && (
+                  <p style={{ fontSize: 16, color: T.muted, lineHeight: 1.75, marginBottom: 28, maxWidth: 480 }}>
+                    {featured.description}
+                  </p>
+                )}
+
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32, fontSize: 13, color: T.muted }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <Avatar user={featured.authorDetails} size={28} fontSize={10} />
+                    <span style={{ fontWeight: 600, color: T.text2 }}>{featured.authorDetails?.username}</span>
+                  </div>
+                  <span>·</span>
+                  <span>{new Date(featured.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                  <span>·</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <HeartSVG /> {featured.likeCount ?? 0}
+                  </span>
+                </div>
+
+                <Link
+                  href={`/blog/${featured._id}`}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "12px 24px", borderRadius: 10, fontSize: 15, fontWeight: 600, background: T.accent, color: "white", textDecoration: "none", transition: "background 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.accentHover)}
+                  onMouseLeave={e => (e.currentTarget.style.background = T.accent)}
+                >
+                  Read Story →
+                </Link>
               </div>
 
-              <Link
-                href={`/blog/${featured._id}`}
-                className="inline-block px-6 py-3 rounded-lg font-bold text-sm text-white transition-opacity hover:opacity-90"
-                style={{ background: "#995F2F" }}
-              >
-                Read Story →
-              </Link>
-            </>
+              {/* Right: cover image */}
+              <div style={{ borderRadius: 16, overflow: "hidden", aspectRatio: "16/9", background: T.surfaceAlt, boxShadow: T.shMd }}>
+                {featured.coverImage?.url ? (
+                  <img src={featured.coverImage.url} alt={featured.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: "100%", height: "100%", background: "repeating-linear-gradient(-45deg,#EFEFEF 0px,#EFEFEF 1.5px,#F8F9FA 1.5px,#F8F9FA 14px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontFamily: "monospace", fontSize: 11, color: "#999", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Cover Photo</span>
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
-            <div className="animate-pulse">
-              <div style={{ height: 24, width: 200, background: "rgba(255,255,255,0.1)", borderRadius: 6, marginBottom: 20 }} />
-              <div style={{ height: 48, width: "55%", background: "rgba(255,255,255,0.1)", borderRadius: 8, marginBottom: 18 }} />
-              <div style={{ height: 18, width: "38%", background: "rgba(255,255,255,0.08)", borderRadius: 6 }} />
+            /* skeleton */
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48 }} className="max-lg:grid-cols-1">
+              <div>
+                <div style={{ height: 20, width: 120, background: "#E5E5E5", borderRadius: 6, marginBottom: 20 }} />
+                <div style={{ height: 44, width: "80%", background: "#E5E5E5", borderRadius: 8, marginBottom: 12 }} />
+                <div style={{ height: 44, width: "60%", background: "#E5E5E5", borderRadius: 8, marginBottom: 20 }} />
+                <div style={{ height: 16, width: "70%", background: "#EEEEEE", borderRadius: 6, marginBottom: 8 }} />
+                <div style={{ height: 16, width: "50%", background: "#EEEEEE", borderRadius: 6, marginBottom: 32 }} />
+                <div style={{ height: 44, width: 140, background: "#E5E5E5", borderRadius: 10 }} />
+              </div>
+              <div style={{ borderRadius: 16, aspectRatio: "16/9", background: "#E5E5E5" }} />
             </div>
           )}
         </div>
       </section>
 
-      {/* ══════════════ TRENDING BAR ══════════════ */}
+      {/* ══════════ TRENDING BAR ══════════ */}
       {trending.length > 0 && (
-        <div
-          role="region"
-          aria-label="Trending articles"
-          style={{ background: "#F5F0EB", borderTop: "1px solid #E5E5E5", borderBottom: "1px solid #E5E5E5" }}
-        >
-          <div className="max-w-screen-2xl mx-auto px-6">
-            <div style={{ padding: "14px 0 10px" }}>
-              <span className="text-[11px] font-bold tracking-[0.12em] uppercase" style={{ color: "#666666" }}>
-                Trending Now
-              </span>
+        <div role="region" aria-label="Trending articles" style={{ background: T.surface, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+          {/* label row */}
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+            <div style={{ padding: "12px 0" }}>
+              <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 700, color: T.muted }}>Trending Now</span>
             </div>
-            <div
-              className="flex overflow-x-auto"
-              style={{ borderTop: "1px solid #E5E5E5", scrollbarWidth: "none" }}
-            >
+          </div>
+          {/* full-width separator + items row */}
+          <div style={{ borderTop: `1px solid ${T.border}` }}>
+            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex" }}>
               {trending.map((post, idx) => (
-                <Link
-                  key={post._id}
-                  href={`/blog/${post._id}`}
-                  className="flex items-start gap-3.5 flex-shrink-0 transition-colors"
-                  style={{
-                    padding: "16px 24px",
-                    minWidth: 230,
-                    borderRight: idx < trending.length - 1 ? "1px solid #E5E5E5" : "none",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#EDE8E3")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  <span
-                    className="font-black leading-none flex-shrink-0"
-                    style={{ fontSize: 30, letterSpacing: "-0.04em", color: "#D5C5B5", minWidth: 38 }}
-                  >
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <div
-                      className="font-bold line-clamp-2"
-                      style={{ fontSize: 13, letterSpacing: "-0.01em", lineHeight: 1.4, marginBottom: 5, color: "#1A0E04" }}
-                    >
-                      {post.title}
-                    </div>
-                    <div style={{ fontSize: 11, color: "#666666" }}>
-                      {post.authorDetails?.username}
-                    </div>
-                  </div>
-                </Link>
+                <TrendingItem key={post._id} post={post} idx={idx} total={trending.length} />
               ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* ══════════════ RECENT POSTS ══════════════ */}
-      <section className="py-[72px]" aria-labelledby="recent-hd">
-        <div className="max-w-screen-2xl mx-auto px-6">
-          <div className="flex items-baseline justify-between mb-8">
-            <h2
-              id="recent-hd"
-              className="font-extrabold tracking-tight"
-              style={{ fontSize: 22, color: "#1A0E04" }}
-            >
-              Recent Posts
-            </h2>
+      {/* ══════════ RECENT POSTS ══════════ */}
+      <section style={{ padding: "72px 0" }} aria-labelledby="recent-hd">
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 32 }}>
+            <h2 id="recent-hd" style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: T.accent }}>Recent Posts</h2>
             <Link
               href="/articles"
-              className="text-sm font-semibold transition-colors hover:text-[#995F2F]"
-              style={{ color: "#666666" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600, background: "transparent", color: T.muted, border: `1.5px solid ${T.border}`, textDecoration: "none", transition: "all 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.text; e.currentTarget.style.borderColor = T.borderStrong; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.muted; e.currentTarget.style.borderColor = T.border; }}
             >
               View all →
             </Link>
           </div>
 
           {blogs.length === 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse rounded-2xl overflow-hidden"
-                  style={{ border: "1px solid #E5E5E5" }}
-                >
-                  <div className="aspect-[16/9] bg-[#F5F0EB]" />
-                  <div className="p-5">
-                    <div className="h-3 bg-[#EDE8E3] rounded w-16 mb-3" />
-                    <div className="h-4 bg-[#EDE8E3] rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-[#EDE8E3] rounded w-full mb-1" />
-                    <div className="h-3 bg-[#EDE8E3] rounded w-5/6" />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }} className="max-sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {[1,2,3].map(i => (
+                <div key={i} style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${T.border}`, background: T.surface }}>
+                  <div style={{ aspectRatio: "16/9", background: T.surfaceAlt }} />
+                  <div style={{ padding: 20 }}>
+                    <div style={{ height: 12, width: 64, background: T.surfaceAlt, borderRadius: 6, marginBottom: 12 }} />
+                    <div style={{ height: 16, width: "75%", background: T.surfaceAlt, borderRadius: 6, marginBottom: 8 }} />
+                    <div style={{ height: 12, width: "100%", background: T.surfaceAlt, borderRadius: 6 }} />
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              style={{ display: "grid", gap: 24 }}
+              className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            >
               {recent.map((post, i) => (
-                <article
-                  key={post._id || i}
-                  className="group flex flex-col rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-[3px] hover:shadow-md"
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #E5E5E5",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                  }}
-                >
-                  <Link href={`/blog/${post._id}`} className="flex flex-col flex-1">
-                    <div className="aspect-[16/9] w-full overflow-hidden bg-[#F5F0EB] flex-shrink-0">
-                      {post.coverImage?.url ? (
-                        <img
-                          src={post.coverImage.url}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-[#F5F0EB] to-[#E5D5C5]" />
-                      )}
-                    </div>
-
-                    <div className="p-5 flex flex-col flex-1">
-                      {post.tag?.[0] && (
-                        <div className="flex gap-1.5 mb-2.5 flex-wrap">
-                          <span
-                            className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
-                            style={{ background: "rgba(153,95,47,0.1)", color: "#995F2F" }}
-                          >
-                            {post.tag[0]}
-                          </span>
-                        </div>
-                      )}
-
-                      <h3
-                        className="font-extrabold line-clamp-2 mb-2 transition-colors group-hover:text-[#995F2F]"
-                        style={{ fontSize: 15, letterSpacing: "-0.01em", lineHeight: 1.35, color: "#1A0E04" }}
-                      >
-                        {post.title}
-                      </h3>
-
-                      {post.description && (
-                        <p
-                          className="line-clamp-3 flex-1 mb-4"
-                          style={{ fontSize: 13, color: "#666666", lineHeight: 1.65 }}
-                        >
-                          {post.description}
-                        </p>
-                      )}
-
-                      <div className="flex items-center justify-between mt-auto">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                            style={{ background: getAvatarColor(post.authorDetails?.username || "") }}
-                          >
-                            {post.authorDetails?.profileImage?.url ? (
-                              <img src={post.authorDetails.profileImage.url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              getInitials(post.authorDetails?.username || "")
-                            )}
-                          </div>
-                          <div>
-                            <div
-                              className="font-semibold"
-                              style={{ fontSize: 12, color: "#1A0E04", lineHeight: 1.2 }}
-                            >
-                              {post.authorDetails?.username}
-                            </div>
-                            <div style={{ fontSize: 11, color: "#666666" }}>
-                              {new Date(post.createdAt).toLocaleDateString("en-US", {
-                                month: "short", day: "numeric",
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2.5" style={{ color: "#666666" }}>
-                          <span className="flex items-center gap-0.5 text-xs">
-                            <HeartIcon /> {post.likeCount ?? 0}
-                          </span>
-                          <span className="flex items-center gap-0.5 text-xs">
-                            <CommentIcon /> {post.commentCount ?? 0}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </article>
+                <BlogCard key={post._id || i} post={post} />
               ))}
             </div>
           )}
 
           {hasMore && (
-            <div className="mt-12 flex justify-center">
+            <div style={{ marginTop: 48, display: "flex", justifyContent: "center" }}>
               <button
-                className="px-8 py-3 rounded-lg font-bold text-sm border-2 transition-all hover:bg-[#995F2F] hover:text-white hover:border-[#995F2F]"
-                style={{ borderColor: "#995F2F", color: "#995F2F" }}
+                style={{ padding: "12px 32px", borderRadius: 8, fontSize: 14, fontWeight: 600, background: "transparent", color: T.text2, border: `1.5px solid ${T.border}`, cursor: "pointer", transition: "all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.accent; e.currentTarget.style.color = "white"; e.currentTarget.style.borderColor = T.accent; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.text2; e.currentTarget.style.borderColor = T.border; }}
               >
                 View More Articles
               </button>
@@ -418,108 +274,42 @@ const HomeContent = () => {
         </div>
       </section>
 
-      {/* ══════════════ POPULAR AUTHORS ══════════════ */}
+      {/* ══════════ POPULAR AUTHORS ══════════ */}
       {authors.length > 0 && (
         <section
           aria-labelledby="authors-hd"
-          style={{
-            background: "#F5F0EB",
-            borderTop: "1px solid #E5E5E5",
-            borderBottom: "1px solid #E5E5E5",
-            padding: "64px 0",
-          }}
+          style={{ background: T.surface, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`, padding: "64px 0" }}
         >
-          <div className="max-w-screen-2xl mx-auto px-6">
-            <div className="flex items-baseline justify-between mb-8">
-              <h2
-                id="authors-hd"
-                className="font-extrabold tracking-tight"
-                style={{ fontSize: 22, color: "#1A0E04" }}
-              >
-                Popular Authors
-              </h2>
-              <Link
-                href="/articles"
-                className="text-sm font-semibold transition-colors hover:text-[#995F2F]"
-                style={{ color: "#666666" }}
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 32 }}>
+              <h2 id="authors-hd" style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: T.accent }}>Popular Authors</h2>
+              <a
+                href="#"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600, background: "transparent", color: T.muted, border: `1.5px solid ${T.border}`, textDecoration: "none", transition: "all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.text; e.currentTarget.style.borderColor = T.borderStrong; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.muted; e.currentTarget.style.borderColor = T.border; }}
               >
                 See all →
-              </Link>
+              </a>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }} className="max-md:grid-cols-2">
               {authors.map((author) => (
-                <Link
-                  key={author._id || author.username}
-                  href={`/profile/${author._id}`}
-                  className="block text-center rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #E5E5E5",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                    padding: "28px 20px 24px",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                >
-                  <div
-                    className="w-16 h-16 rounded-full mx-auto mb-3 overflow-hidden flex items-center justify-center text-white font-extrabold text-xl"
-                    style={{ background: getAvatarColor(author.username || "") }}
-                  >
-                    {author.profileImage?.url ? (
-                      <img src={author.profileImage.url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      getInitials(author.username || "")
-                    )}
-                  </div>
-                  <div
-                    className="font-bold mb-1"
-                    style={{ fontSize: 15, letterSpacing: "-0.01em", color: "#1A0E04" }}
-                  >
-                    {author.username}
-                  </div>
-                  <div className="mb-3" style={{ fontSize: 12, color: "#666666" }}>
-                    {author.likeTotal} likes · {author.blogCount} {author.blogCount === 1 ? "post" : "posts"}
-                  </div>
-                  <span
-                    className="inline-block px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors"
-                    style={{ borderColor: "#E5E5E5", color: "#995F2F" }}
-                  >
-                    View Profile
-                  </span>
-                </Link>
+                <AuthorBento key={author._id || author.username} author={author} />
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* ══════════════ EXPLORE TOPICS ══════════════ */}
-      <section className="py-[72px]" aria-labelledby="topics-hd">
-        <div className="max-w-screen-2xl mx-auto px-6">
-          <div className="mb-8">
-            <h2
-              id="topics-hd"
-              className="font-extrabold tracking-tight"
-              style={{ fontSize: 22, color: "#1A0E04" }}
-            >
-              Explore Topics
-            </h2>
+      {/* ══════════ EXPLORE TOPICS ══════════ */}
+      <section style={{ padding: "72px 0" }} aria-labelledby="topics-hd">
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 32 }}>
+            <h2 id="topics-hd" style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: T.accent }}>Explore Topics</h2>
           </div>
-          <div className="flex flex-wrap gap-2.5">
-            {TOPICS.map((topic) => (
-              <Link
-                key={topic}
-                href="/articles"
-                className="px-5 py-2 rounded-full text-[13px] font-semibold border-[1.5px] transition-all duration-150 hover:text-[#995F2F] hover:bg-[#F5F0EB] hover:border-[#995F2F]/30"
-                style={{
-                  background: "#FFFFFF",
-                  color: "#1A0E04",
-                  borderColor: "#E5E5E5",
-                  textDecoration: "none",
-                }}
-              >
-                {topic}
-              </Link>
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 10 }}>
+            {TOPICS.map(topic => (
+              <TopicPill key={topic} label={topic} />
             ))}
           </div>
         </div>
@@ -527,6 +317,180 @@ const HomeContent = () => {
 
     </div>
   );
-};
+}
 
-export default HomeContent;
+/* ── Trending Item ── */
+function TrendingItem({ post, idx, total }: { post: any; idx: number; total: number }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link
+      href={`/blog/${post._id}`}
+      style={{
+        flex: "1 1 0",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 12,
+        padding: "16px 20px",
+        borderRight: idx < total - 1 ? `1px solid ${T.border}` : "none",
+        textDecoration: "none",
+        color: "inherit",
+        background: hovered ? T.surfaceAlt : "transparent",
+        transition: "background 0.15s",
+        minWidth: 0,
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <span style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.04em", color: T.borderStrong, lineHeight: 1, flexShrink: 0, minWidth: 32 }}>
+        {String(idx + 1).padStart(2, "0")}
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.4, marginBottom: 4, color: T.text, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>
+          {post.title}
+        </div>
+        <div style={{ fontSize: 11, color: T.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {post.authorDetails?.username}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/* ── Blog Card ── */
+function BlogCard({ post }: { post: any }) {
+  const [hovered, setHovered] = useState(false);
+  const ts = tagStyle(post.tag?.[0]);
+
+  return (
+    <article
+      style={{
+        background: "#FFFFFF", border: `1px solid ${T.border}`, borderRadius: 16, overflow: "hidden",
+        boxShadow: hovered ? T.shMd : T.shSm, transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        transition: "all 0.2s", cursor: "pointer", display: "flex", flexDirection: "column",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={() => window.location.href = `/blog/${post._id}`}
+    >
+      {/* cover */}
+      <div style={{ aspectRatio: "16/9", width: "100%", overflow: "hidden" }}>
+        {post.coverImage?.url ? (
+          <img src={post.coverImage.url} alt={post.title} style={{ width: "100%", height: "100%", objectFit: "cover", transform: hovered ? "scale(1.05)" : "scale(1)", transition: "transform 0.5s" }} />
+        ) : (
+          <div style={{ width: "100%", height: "100%", background: "repeating-linear-gradient(-45deg,#F5F5F5 0px,#F5F5F5 1.5px,#FFFFFF 1.5px,#FFFFFF 14px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontFamily: "monospace", fontSize: 10, color: T.muted, letterSpacing: "0.06em", textTransform: "uppercase", padding: "6px 10px", background: "#FFFFFF", borderRadius: 6, border: `1px solid ${T.border}` }}>cover photo</span>
+          </div>
+        )}
+      </div>
+
+      {/* body */}
+      <div style={{ padding: 20, flex: 1, display: "flex", flexDirection: "column" }}>
+        {post.tag?.[0] && (
+          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" as const }}>
+            <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 10px", borderRadius: 9999, fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" as const, background: ts.bg, color: ts.color, border: `1px solid ${ts.border}` }}>
+              {post.tag[0]}
+            </span>
+          </div>
+        )}
+
+        <h3 style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.35, color: hovered ? T.accent : T.text, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden", transition: "color 0.15s" }}>
+          {post.title}
+        </h3>
+
+        {post.description && (
+          <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.65, marginBottom: 16, flex: 1, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
+            {post.description}
+          </p>
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Avatar user={post.authorDetails} size={28} fontSize={10} />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.text, lineHeight: 1.2 }}>{post.authorDetails?.username}</div>
+              <div style={{ fontSize: 11, color: T.muted }}>
+                {new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, color: T.muted }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12 }}><HeartSVG />{post.likeCount ?? 0}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12 }}><CommentSVG />{post.commentCount ?? 0}</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/* ── Author Bento ── */
+function AuthorBento({ author }: { author: any }) {
+  const [hovered, setHovered] = useState(false);
+  const [following, setFollowing] = useState(false);
+
+  return (
+    <div
+      style={{
+        background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16,
+        padding: "28px 20px 24px", textAlign: "center",
+        boxShadow: hovered ? T.shMd : T.shSm, transform: hovered ? "translateY(-2px)" : "translateY(0)",
+        transition: "all 0.2s",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <Link href={`/profile/${author._id}`} style={{ textDecoration: "none" }}>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", margin: "0 auto 12px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: getAvatarColor(author.username || ""), color: "white", fontWeight: 800, fontSize: 20 }}>
+          {author.profileImage?.url
+            ? <img src={author.profileImage.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : initials(author.username || "")}
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 3, color: T.text }}>{author.username}</div>
+      </Link>
+      <div style={{ fontSize: 12, color: T.muted, marginBottom: 12 }}>
+        {author.likeTotal} likes · {author.blogCount} {author.blogCount === 1 ? "post" : "posts"}
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: 9999, fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" as const, background: T.surfaceAlt, color: T.muted, border: `1px solid ${T.border}` }}>
+          Writer
+        </span>
+      </div>
+      <button
+        onClick={() => setFollowing(f => !f)}
+        style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          padding: "5px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600,
+          background: following ? "transparent" : "transparent",
+          color: following ? T.success : T.accent,
+          border: `1.5px solid ${following ? T.success : T.accent}`,
+          cursor: "pointer", transition: "all 0.15s",
+        }}
+        onMouseEnter={e => { if (!following) { e.currentTarget.style.background = T.accent; e.currentTarget.style.color = "white"; } }}
+        onMouseLeave={e => { if (!following) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.accent; } }}
+      >
+        {following ? "Following ✓" : "Follow"}
+      </button>
+    </div>
+  );
+}
+
+/* ── Topic Pill ── */
+function TopicPill({ label }: { label: string }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link
+      href="/articles"
+      style={{
+        padding: "8px 18px", borderRadius: 9999, fontSize: 13, fontWeight: 600,
+        background: hovered ? T.accentDim : T.surface,
+        color: hovered ? T.accent : T.text,
+        border: `1.5px solid ${hovered ? "rgba(152,95,46,0.3)" : T.border}`,
+        textDecoration: "none", transition: "all 0.15s", display: "inline-block",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {label}
+    </Link>
+  );
+}

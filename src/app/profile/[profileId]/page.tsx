@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import axiosInstance from "@/lib/axios";
 import Link from "next/link";
@@ -213,7 +213,7 @@ const CuratorProfile = () => {
           {displayCover ? (
             <img src={displayCover} alt="Cover" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-[#995F2F] to-[#7A4A22]" />
+            <div className="w-full h-full bg-gradient-to-r from-[#985F2E] to-[#7A4A22]" />
           )}
           {isOwner && (
             <>
@@ -244,7 +244,7 @@ const CuratorProfile = () => {
                 {displayImage ? (
                   <img src={displayImage} alt={displayUsername ?? ""} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#995F2F] to-[#7A4A22] flex items-center justify-center text-white text-2xl font-bold">
+                  <div className="w-full h-full bg-gradient-to-br from-[#985F2E] to-[#7A4A22] flex items-center justify-center text-white text-2xl font-bold">
                     {displayUsername?.[0]?.toUpperCase() ?? "?"}
                   </div>
                 )}
@@ -281,7 +281,7 @@ const CuratorProfile = () => {
                     className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 shadow-sm border ${
                       isFollowing
                         ? "bg-[#1A0E04] text-white border-transparent hover:bg-black"
-                        : "bg-[#995F2F] text-white border-transparent hover:bg-[#7A4A22]"
+                        : "bg-[#985F2E] text-white border-transparent hover:bg-[#7A4A22]"
                     } ${followLoading ? "opacity-70 cursor-not-allowed" : ""}`}
                   >
                     {followLoading ? "Please wait..." : isFollowing ? "Following" : userChannel?.isFollower ? "Follow Back" : "Follow"}
@@ -306,11 +306,11 @@ const CuratorProfile = () => {
             ) : (
               <>
                 <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
-                  <span className="px-3 py-1 bg-[#F5F0EB] text-[#995F2F] text-[11px] font-black tracking-widest uppercase rounded-full">
+                  <span className="px-3 py-1 bg-[#F5F0EB] text-[#985F2E] text-[11px] font-black tracking-widest uppercase rounded-full">
                     Writer
                   </span>
                   {displayCreatedAt && (
-                    <span className="px-3 py-1 bg-[#F5F0EB] text-[#995F2F] text-[11px] font-black tracking-widest uppercase rounded-full">
+                    <span className="px-3 py-1 bg-[#F5F0EB] text-[#985F2E] text-[11px] font-black tracking-widest uppercase rounded-full">
                       Since {new Date(displayCreatedAt).getFullYear()}
                     </span>
                   )}
@@ -332,7 +332,7 @@ const CuratorProfile = () => {
                     { value: `${recentPosts.length}+`, label: "Posts" },
                   ].map((s) => (
                     <div key={s.label}>
-                      <div className="text-3xl sm:text-4xl font-black text-[#995F2F] tracking-tighter">
+                      <div className="text-3xl sm:text-4xl font-black text-[#985F2E] tracking-tighter">
                         {s.value}
                       </div>
                       <div className="text-xs uppercase tracking-[0.2em] font-bold text-[#6e7881] mt-1">
@@ -360,7 +360,7 @@ const CuratorProfile = () => {
                     <h3 className="text-xl sm:text-2xl font-black text-[#171c20] mb-4">{f.title}</h3>
                     <p className="text-[#3e4850] leading-relaxed text-sm sm:text-base">{f.desc}</p>
                   </div>
-                  <div className="text-[#995F2F] font-black text-sm tracking-widest uppercase mt-6 sm:mt-4 flex items-center gap-2 group-hover:translate-x-2 transition-transform">
+                  <div className="text-[#985F2E] font-black text-sm tracking-widest uppercase mt-6 sm:mt-4 flex items-center gap-2 group-hover:translate-x-2 transition-transform">
                     {f.cta} →
                   </div>
                 </div>
@@ -373,12 +373,12 @@ const CuratorProfile = () => {
         <section className="max-w-screen-2xl mx-auto px-4 sm:px-8 mb-16 sm:mb-24">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8 sm:mb-12">
             <div>
-              <span className="text-[#995F2F] text-[11px] font-black tracking-[0.3em] uppercase mb-2 block">Latest Works</span>
+              <span className="text-[#985F2E] text-[11px] font-black tracking-[0.3em] uppercase mb-2 block">Latest Works</span>
               <h2 className="text-3xl sm:text-4xl font-black tracking-tighter text-[#171c20]">Recent Publications</h2>
             </div>
             <button
               onClick={() => router.push("/articles")}
-              className="text-sm font-bold border-b-2 border-[#995F2F] text-[#3e4850] hover:text-[#995F2F] transition-colors pb-1 whitespace-nowrap"
+              className="text-sm font-bold border-b-2 border-[#985F2E] text-[#3e4850] hover:text-[#985F2E] transition-colors pb-1 whitespace-nowrap"
             >
               View Archive
             </button>
@@ -405,11 +405,11 @@ const CuratorProfile = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
                 </div>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-xs font-black text-[#995F2F] uppercase tracking-widest">Essay</span>
+                  <span className="text-xs font-black text-[#985F2E] uppercase tracking-widest">Essay</span>
                   <span className="text-[#E5E5E5]">·</span>
                   <span className="text-xs font-medium text-[#6e7881]">{formatDate(recentPosts[0].createdAt)}</span>
                 </div>
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#171c20] mb-3 leading-tight group-hover:text-[#995F2F] transition-colors line-clamp-2">
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#171c20] mb-3 leading-tight group-hover:text-[#985F2E] transition-colors line-clamp-2">
                   {recentPosts[0].title}
                 </h3>
                 <p className="text-[#3e4850] text-sm sm:text-base leading-relaxed line-clamp-3 mb-3">
@@ -433,10 +433,10 @@ const CuratorProfile = () => {
                       />
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <span className="text-[10px] font-black tracking-[0.2em] text-[#995F2F] uppercase mb-1 block">
+                      <span className="text-[10px] font-black tracking-[0.2em] text-[#985F2E] uppercase mb-1 block">
                         {post.tag?.[0] ?? "Essay"}
                       </span>
-                      <h4 className="text-sm font-bold text-[#171c20] mb-1.5 leading-snug group-hover:text-[#995F2F] transition-colors line-clamp-2">
+                      <h4 className="text-sm font-bold text-[#171c20] mb-1.5 leading-snug group-hover:text-[#985F2E] transition-colors line-clamp-2">
                         {post.title}
                       </h4>
                       <p className="text-xs text-[#6e7881] leading-relaxed line-clamp-2">{post.description}</p>
@@ -472,10 +472,10 @@ const CuratorProfile = () => {
                             />
                           </div>
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <h4 className="text-sm font-bold text-[#171c20] mb-2 group-hover:text-[#995F2F] transition-colors leading-snug line-clamp-2">
+                            <h4 className="text-sm font-bold text-[#171c20] mb-2 group-hover:text-[#985F2E] transition-colors leading-snug line-clamp-2">
                               {item.title}
                             </h4>
-                            <span className="text-xs font-bold text-[#995F2F]">{stat(item)}</span>
+                            <span className="text-xs font-bold text-[#985F2E]">{stat(item)}</span>
                           </div>
                         </Link>
                       ))}
@@ -491,7 +491,7 @@ const CuratorProfile = () => {
             <div
               className="absolute inset-0 opacity-20 pointer-events-none"
               style={{
-                background: "radial-gradient(circle at top right, #995F2F, transparent), radial-gradient(circle at bottom left, #7A4A22, transparent)",
+                background: "radial-gradient(circle at top right, #985F2E, transparent), radial-gradient(circle at bottom left, #7A4A22, transparent)",
               }}
             />
             <div className="relative z-10 text-center">
@@ -506,9 +506,9 @@ const CuratorProfile = () => {
                 <input
                   type="email"
                   placeholder="Enter your email address"
-                  className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-white/10 border-0 text-white placeholder:text-white/40 focus:ring-2 focus:ring-[#995F2F] outline-none transition-all"
+                  className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-white/10 border-0 text-white placeholder:text-white/40 focus:ring-2 focus:ring-[#985F2E] outline-none transition-all"
                 />
-                <button className="px-6 sm:px-8 py-3 sm:py-4 bg-[#995F2F] text-white font-bold rounded-xl hover:bg-[#7A4A22] transition-colors">
+                <button className="px-6 sm:px-8 py-3 sm:py-4 bg-[#985F2E] text-white font-bold rounded-xl hover:bg-[#7A4A22] transition-colors">
                   Subscribe
                 </button>
               </div>

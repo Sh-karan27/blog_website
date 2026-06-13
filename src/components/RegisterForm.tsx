@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import axiosInstance from "@/lib/axios";
 import React, { useState, ChangeEvent } from "react";
 
@@ -29,8 +29,8 @@ const getPasswordStrength = (pw: string): number => {
 };
 
 const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"];
-const strengthColor = ["", "bg-red-500", "bg-yellow-500", "bg-[#995F2F]", "bg-green-500"];
-const strengthText = ["", "text-red-500", "text-yellow-500", "text-[#995F2F]", "text-green-500"];
+const strengthColor = ["", "bg-red-500", "bg-yellow-500", "bg-[#985F2E]", "bg-green-500"];
+const strengthText = ["", "text-red-500", "text-yellow-500", "text-[#985F2E]", "text-green-500"];
 
 export default function RegisterComponent() {
   const [formData, setFormData] = useState<FormData>({
@@ -128,7 +128,7 @@ export default function RegisterComponent() {
     `w-full px-4 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
       errors[field]
         ? "border-red-400 focus:ring-red-200"
-        : "border-[#E5E5E5] focus:ring-[#995F2F]/30 focus:border-[#995F2F]"
+        : "border-[#E5E5E5] focus:ring-[#985F2E]/30 focus:border-[#985F2E]"
     }`;
 
   return (
@@ -136,7 +136,7 @@ export default function RegisterComponent() {
       {/* ── Left panel ── */}
       <div
         className="hidden lg:flex lg:w-[420px] flex-col justify-between p-12 flex-shrink-0 relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #995F2F 0%, #7A4A22 100%)" }}
+        style={{ background: "linear-gradient(160deg, #985F2E 0%, #7A4A22 100%)" }}
       >
         <div
           className="absolute inset-0 opacity-10"
@@ -170,7 +170,7 @@ export default function RegisterComponent() {
             { step: "04", label: "Build your following", done: false },
           ].map((s) => (
             <div key={s.step} className="flex items-center gap-4">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 ${s.done ? "bg-white text-[#995F2F]" : "bg-white/20 text-white"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 ${s.done ? "bg-white text-[#985F2E]" : "bg-white/20 text-white"}`}>
                 {s.done ? "✓" : s.step}
               </div>
               <span className={`text-sm font-semibold ${s.done ? "text-white" : "text-white/50"}`}>
@@ -186,7 +186,7 @@ export default function RegisterComponent() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-6 lg:hidden">
-            <svg className="w-6 h-6 text-[#995F2F]" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-6 h-6 text-[#985F2E]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C12 2 4 10.5 4 15a8 8 0 0016 0C20 10.5 12 2 12 2z" />
             </svg>
             <span className="text-xl font-black tracking-tighter text-gray-900">Inkwell</span>
@@ -304,7 +304,7 @@ export default function RegisterComponent() {
                 value={formData.bio}
                 onChange={handleInputChange}
                 placeholder="Bio (optional) — tell people a bit about yourself"
-                className="w-full px-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] resize-none transition-all"
+                className="w-full px-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#985F2E]/30 focus:border-[#985F2E] resize-none transition-all"
                 maxLength={160}
               />
               <p className="text-xs text-gray-400 text-right mt-1">
@@ -317,12 +317,12 @@ export default function RegisterComponent() {
               <p className="text-xs font-semibold text-gray-600 mb-2">
                 Profile Image <span className="text-red-500">*</span>
               </p>
-              <label className="flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition-all hover:border-[#995F2F] hover:bg-[#FBF7F4]"
+              <label className="flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition-all hover:border-[#985F2E] hover:bg-[#FBF7F4]"
                 style={{ borderColor: errors.profileImage ? "#ef4444" : "#E5E5E5", minHeight: "100px" }}>
                 {profilePreview ? (
                   <div className="flex items-center gap-3 p-4">
-                    <img src={profilePreview} alt="Preview" className="w-14 h-14 rounded-full object-cover border-2 border-[#995F2F]" />
-                    <span className="text-sm text-[#995F2F] font-medium">Change photo</span>
+                    <img src={profilePreview} alt="Preview" className="w-14 h-14 rounded-full object-cover border-2 border-[#985F2E]" />
+                    <span className="text-sm text-[#985F2E] font-medium">Change photo</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center py-5">
@@ -346,7 +346,7 @@ export default function RegisterComponent() {
             {/* Cover Image */}
             <div>
               <p className="text-xs font-semibold text-gray-600 mb-2">Cover Image <span className="text-gray-400">(optional)</span></p>
-              <label className="flex items-center gap-3 w-full px-4 py-3 border border-dashed border-[#E5E5E5] rounded-xl cursor-pointer hover:border-[#995F2F] hover:bg-[#FBF7F4] transition-all">
+              <label className="flex items-center gap-3 w-full px-4 py-3 border border-dashed border-[#E5E5E5] rounded-xl cursor-pointer hover:border-[#985F2E] hover:bg-[#FBF7F4] transition-all">
                 <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -361,7 +361,7 @@ export default function RegisterComponent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-lg bg-[#995F2F] text-white font-bold hover:bg-[#7A4A22] transition-all disabled:opacity-50 flex items-center justify-center shadow-sm hover:shadow-md mt-2"
+              className="w-full py-3 rounded-lg bg-[#985F2E] text-white font-bold hover:bg-[#7A4A22] transition-all disabled:opacity-50 flex items-center justify-center shadow-sm hover:shadow-md mt-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -373,7 +373,7 @@ export default function RegisterComponent() {
 
           <p className="mt-6 text-center text-sm text-gray-500">
             Already have an account?{" "}
-            <a href="/login" className="font-bold text-[#995F2F] hover:text-[#7A4A22] transition-colors">
+            <a href="/login" className="font-bold text-[#985F2E] hover:text-[#7A4A22] transition-colors">
               Sign in
             </a>
           </p>

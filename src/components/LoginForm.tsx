@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState } from "react";
 import axiosInstance from "@/lib/axios";
 import { useRouter } from "next/navigation";
@@ -36,6 +36,7 @@ export default function LoginComponent() {
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("profileImage", user?.profileImage?.url);
+      localStorage.setItem("userId", user?._id);
       router.push("/");
       showSuccessToast("Login successful!");
     } catch (err: any) {
@@ -55,7 +56,7 @@ export default function LoginComponent() {
       {/* ── Left panel (branding) ── */}
       <div
         className="hidden lg:flex lg:w-[480px] flex-col justify-between p-12 flex-shrink-0 relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #995F2F 0%, #7A4A22 100%)" }}
+        style={{ background: "linear-gradient(160deg, #985F2E 0%, #7A4A22 100%)" }}
       >
         {/* Grid pattern */}
         <div
@@ -101,7 +102,7 @@ export default function LoginComponent() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <svg className="w-6 h-6 text-[#995F2F]" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-6 h-6 text-[#985F2E]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C12 2 4 10.5 4 15a8 8 0 0016 0C20 10.5 12 2 12 2z" />
             </svg>
             <span className="text-xl font-black tracking-tighter text-gray-900">Inkwell</span>
@@ -125,7 +126,7 @@ export default function LoginComponent() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Email address"
-                className="w-full pl-10 pr-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#985F2E]/30 focus:border-[#985F2E] transition-all"
               />
             </div>
 
@@ -143,7 +144,7 @@ export default function LoginComponent() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Password"
-                className="w-full pl-10 pr-10 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#995F2F]/30 focus:border-[#995F2F] transition-all"
+                className="w-full pl-10 pr-10 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#985F2E]/30 focus:border-[#985F2E] transition-all"
               />
               <button
                 type="button"
@@ -167,7 +168,7 @@ export default function LoginComponent() {
           {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
 
           <div className="text-right mt-3 mb-6">
-            <a className="text-sm text-gray-400 hover:text-[#995F2F] transition-colors cursor-pointer">
+            <a className="text-sm text-gray-400 hover:text-[#985F2E] transition-colors cursor-pointer">
               Forgot password?
             </a>
           </div>
@@ -175,7 +176,7 @@ export default function LoginComponent() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-[#995F2F] text-white font-bold hover:bg-[#7A4A22] transition-all disabled:opacity-50 flex items-center justify-center shadow-sm hover:shadow-md"
+            className="w-full py-3 rounded-lg bg-[#985F2E] text-white font-bold hover:bg-[#7A4A22] transition-all disabled:opacity-50 flex items-center justify-center shadow-sm hover:shadow-md"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -205,7 +206,7 @@ export default function LoginComponent() {
 
           <p className="mt-8 text-center text-sm text-gray-500">
             Don&apos;t have an account?{" "}
-            <a href="/register" className="font-bold text-[#995F2F] hover:text-[#7A4A22] transition-colors">
+            <a href="/register" className="font-bold text-[#985F2E] hover:text-[#7A4A22] transition-colors">
               Sign up
             </a>
           </p>
