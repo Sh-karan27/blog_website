@@ -232,20 +232,45 @@ const SingleBlogPage = () => {
         .iw-btn-secondary:hover { background: #995F2F; color: white; }
         .iw-btn-ghost { background: transparent; color: #666666; border: 1.5px solid #E5E5E5; }
         .iw-btn-ghost:hover { background: #F5F5F5; color: #1A1A1A; border-color: #CCCCCC; }
+
+        /* ── Responsive layout ── */
+        .iw-hero { width: 100%; aspect-ratio: 21/9; background: #F5F0EB; overflow: hidden; position: relative; }
+        .iw-article-pad { max-width: 680px; margin: 0 auto; padding: 56px 24px 0; }
+        .iw-nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 8px; }
+        .iw-subtitle { font-size: 20px; line-height: 1.6; color: #6B7280; font-weight: 400; margin-bottom: 28px; }
+        .iw-engbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; margin-bottom: 48px; }
+        .iw-engbar-group { display: flex; align-items: center; gap: 4px; }
+        .iw-more-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+        .iw-card-body { padding: 0 28px 28px; }
+
+        @media (max-width: 640px) {
+          .iw-hero { aspect-ratio: 16/9; }
+          .iw-article-pad { padding: 28px 16px 0; }
+          .iw-nav-row { flex-wrap: wrap; }
+          .iw-subtitle { font-size: 16px; }
+          .iw-engbar { flex-wrap: wrap; gap: 8px; }
+          .iw-more-grid { grid-template-columns: 1fr; }
+          .iw-card-body { padding: 0 16px 20px; }
+        }
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .iw-article-pad { padding: 40px 20px 0; }
+          .iw-more-grid { grid-template-columns: repeat(2,1fr); }
+          .iw-hero { aspect-ratio: 16/9; }
+        }
       `}</style>
 
 
       {/* ── Hero cover ── */}
-      <div style={{ width: "100%", aspectRatio: "21/9", background: "#F5F0EB", overflow: "hidden", position: "relative" }}>
+      <div className="iw-hero">
         <img src={blog.coverImage?.url} alt={blog.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
 
       {/* ── Article wrap ── */}
       <article>
-        <div style={{ maxWidth: 680, margin: "0 auto", padding: "56px 24px 0" }}>
+        <div className="iw-article-pad">
 
           {/* Nav row: Back | owner controls | Share + Bookmark */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+          <div className="iw-nav-row">
             <button
               onClick={() => router.back()}
               style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#666666", cursor: "pointer", border: "none", background: "transparent", padding: "6px 0", transition: "color 0.15s", fontFamily: "inherit" }}
@@ -283,7 +308,7 @@ const SingleBlogPage = () => {
           </h1>
 
           {/* Subtitle */}
-          <p style={{ fontSize: 20, lineHeight: 1.6, color: "#6B7280", fontWeight: 400, marginBottom: 28 }}>
+          <p className="iw-subtitle">
             {blog.description}
           </p>
 
@@ -318,24 +343,27 @@ const SingleBlogPage = () => {
           </div>
 
           {/* ── Engagement bar ── */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "20px 0", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, marginBottom: 48 }}>
-            <EngBtn active={blog.isLiked} onClick={toggleBlogLike} aria-label="Like">
-              <Heart size={16} style={blog.isLiked ? { fill: "currentColor" } : {}} />
-              {fmtN(blog.likeCount)}
-            </EngBtn>
-            <EngBtn onClick={() => { setShowComments(s => !s); document.getElementById("comments")?.scrollIntoView({ behavior: "smooth" }); }} aria-label="Comments">
-              <MessageSquare size={16} />
-              {blog.commentCount}
-            </EngBtn>
-            <div style={{ flex: 1 }} />
-            <EngBtn active={saved} bookmarked={saved} onClick={() => setSaved(s => !s)} aria-label="Save">
-              <Bookmark size={16} style={saved ? { fill: "currentColor" } : {}} />
-              {saved ? "Saved" : "Save"}
-            </EngBtn>
-            <EngBtn aria-label="Share">
-              <Share2 size={16} />
-              Share
-            </EngBtn>
+          <div className="iw-engbar" style={{ borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
+            <div className="iw-engbar-group">
+              <EngBtn active={blog.isLiked} onClick={toggleBlogLike} aria-label="Like">
+                <Heart size={16} style={blog.isLiked ? { fill: "currentColor" } : {}} />
+                {fmtN(blog.likeCount)}
+              </EngBtn>
+              <EngBtn onClick={() => { setShowComments(s => !s); document.getElementById("comments")?.scrollIntoView({ behavior: "smooth" }); }} aria-label="Comments">
+                <MessageSquare size={16} />
+                {blog.commentCount}
+              </EngBtn>
+            </div>
+            <div className="iw-engbar-group">
+              <EngBtn active={saved} bookmarked={saved} onClick={() => setSaved(s => !s)} aria-label="Save">
+                <Bookmark size={16} style={saved ? { fill: "currentColor" } : {}} />
+                {saved ? "Saved" : "Save"}
+              </EngBtn>
+              <EngBtn aria-label="Share">
+                <Share2 size={16} />
+                Share
+              </EngBtn>
+            </div>
           </div>
 
           {/* ── Author card ── */}
@@ -346,7 +374,7 @@ const SingleBlogPage = () => {
                 <img src={blog.author.coverImage.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               )}
             </div>
-            <div style={{ padding: "0 28px 28px" }}>
+            <div className="iw-card-body">
               {/* Avatar row — overlaps cover, z-index keeps it above the cover strip */}
               <div style={{ marginTop: -28, marginBottom: 16, position: "relative", zIndex: 1 }}>
                 <div style={{ width: 56, height: 56, borderRadius: "50%", border: "3px solid white", overflow: "hidden", flexShrink: 0, boxSizing: "content-box" as const }}>
@@ -400,7 +428,7 @@ const SingleBlogPage = () => {
               <h3 style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.015em", marginBottom: 20, color: ACCENT }}>
                 More from {blog.author.username}
               </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+              <div className="iw-more-grid">
                 {blog.moreFromAuthor.map(post => (
                   <button
                     key={post._id}
