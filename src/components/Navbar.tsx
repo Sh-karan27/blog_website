@@ -76,6 +76,7 @@ const Navbar = () => {
             <nav className="hidden lg:flex items-center gap-5 text-sm font-medium">
               {[
                 { label: "Home", href: "/" },
+                { label: "Articles", href: "/articles" },
                 { label: "My Profile", href: profileHref },
                 { label: "Settings", href: "/settings" },
               ].map((item) => (
@@ -182,6 +183,7 @@ const Navbar = () => {
         <nav className="flex flex-col px-5 sm:px-8 pt-6 flex-1 overflow-y-auto">
           {[
             { label: "Home", href: "/" },
+            { label: "Articles", href: "/articles" },
             { label: "Write", href: "/write" },
             { label: "My Profile", href: profileHref },
             { label: "Settings", href: "/settings" },
