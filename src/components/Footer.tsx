@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -10,40 +10,58 @@ const T = {
   text2:       "#1A1A1A",
   muted:       "#666666",
   border:      "#E5E5E5",
-  borderStrong:"#CCCCCC",
 };
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   const [hovered, setHovered] = useState(false);
   const isExternal = href === "#";
+  const style: React.CSSProperties = { fontSize: 14, color: hovered ? T.accent : T.text2, textDecoration: "none", transition: "color 0.15s" };
   return isExternal ? (
-    <a
-      href={href}
-      style={{ fontSize: 14, color: hovered ? T.accent : T.text2, textDecoration: "none", transition: "color 0.15s" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {children}
-    </a>
+    <a href={href} style={style} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>{children}</a>
   ) : (
-    <Link
-      href={href}
-      style={{ fontSize: 14, color: hovered ? T.accent : T.text2, textDecoration: "none", transition: "color 0.15s" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {children}
-    </Link>
+    <Link href={href} style={style} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>{children}</Link>
   );
 }
 
 export default function Footer() {
   return (
-    <footer style={{ background: T.surface, borderTop: `1px solid ${T.border}`, paddingTop: 64, paddingBottom: 32 }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+    <footer style={{ background: T.surface, borderTop: `1px solid ${T.border}`, paddingTop: 48, paddingBottom: 28 }}>
+      <style>{`
+        .iw-footer-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr 1fr;
+          gap: 48px;
+          margin-bottom: 48px;
+        }
+        .iw-newsletter {
+          display: flex;
+          gap: 8px;
+          margin-top: 14px;
+        }
+        .iw-footer-bottom {
+          padding-top: 24px;
+          border-top: 1px solid ${T.border};
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 13px;
+          color: ${T.muted};
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 1023px) {
+          .iw-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+        }
+        @media (max-width: 599px) {
+          .iw-footer-grid { grid-template-columns: 1fr; gap: 28px; }
+          .iw-newsletter { flex-direction: column; }
+          .iw-footer-bottom { flex-direction: column; align-items: flex-start; gap: 4px; }
+        }
+      `}</style>
 
-        {/* 4-column grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 48 }} className="max-md:grid-cols-2 max-md:gap-8">
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 20px" }}>
+
+        <div className="iw-footer-grid">
 
           {/* Brand + newsletter */}
           <div>
@@ -65,7 +83,6 @@ export default function Footer() {
             <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: T.muted, marginBottom: 14 }}>Platform</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <FooterLink href="/">Home</FooterLink>
-              <FooterLink href="/articles">Articles</FooterLink>
               <FooterLink href="/write">Write a Story</FooterLink>
               <FooterLink href="#">Explore Authors</FooterLink>
               <FooterLink href="#">Topics</FooterLink>
@@ -97,9 +114,9 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div style={{ paddingTop: 28, borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 13, color: T.muted }}>
+        <div className="iw-footer-bottom">
           <span>© 2026 Inkwell. All rights reserved.</span>
-          <span className="hidden sm:inline">Made with care for writers everywhere.</span>
+          <span>Made with care for writers everywhere.</span>
         </div>
       </div>
     </footer>
@@ -111,7 +128,7 @@ function NewsletterForm() {
   const [focused, setFocused] = useState(false);
 
   return (
-    <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+    <div className="iw-newsletter">
       <input
         type="email"
         value={email}
@@ -128,7 +145,7 @@ function NewsletterForm() {
         onBlur={() => setFocused(false)}
       />
       <button
-        style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "5px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600, background: T.accent, color: "white", border: "none", cursor: "pointer", transition: "background 0.15s", whiteSpace: "nowrap" }}
+        style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "8px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600, background: T.accent, color: "white", border: "none", cursor: "pointer", transition: "background 0.15s", whiteSpace: "nowrap" }}
         onMouseEnter={e => (e.currentTarget.style.background = T.accentHover)}
         onMouseLeave={e => (e.currentTarget.style.background = T.accent)}
       >
