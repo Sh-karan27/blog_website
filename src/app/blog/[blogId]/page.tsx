@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
-import { io } from "socket.io-client";
 import { ArrowLeft, Share2, Bookmark, Heart, MessageSquare, Send, Edit2, Trash2, Pencil, Eye, EyeOff, ChevronDown } from "lucide-react";
 
 const ACCENT = "#995F2F";
@@ -80,7 +79,6 @@ function Avatar({ src, alt, size = 36 }: { src?: string; alt: string; size?: num
 }
 
 const SingleBlogPage = () => {
-  const socketRef = useRef<ReturnType<typeof io> | null>(null);
   const { blogId } = useParams() as { blogId: string };
   const [published, setPublished] = useState(true);
   const [toggleLoading, setToggleLoading] = useState(false);
@@ -98,23 +96,6 @@ const SingleBlogPage = () => {
   const [visibleComments, setVisibleComments] = useState(5);
   const [isFollowing, setIsFollowing] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    if (!blogId) return;
-    const socket = io("http://localhost:3000");
-    socketRef.current = socket;
-    socket.emit("join-blog", blogId);
-    const handleBlogLiked = (data: { blogId: string; likeCount: number }) => {
-      if (data.blogId === blogId)
-        setBlog((prev) => prev ? { ...prev, likeCount: data.likeCount } : null);
-    };
-    socket.on("blog-liked", handleBlogLiked);
-    return () => {
-      socket.off("blog-liked", handleBlogLiked);
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, [blogId]);
 
   useEffect(() => {
     if (!blogId) return;
@@ -149,7 +130,6 @@ const SingleBlogPage = () => {
       const res = await axiosInstance.post(`/likes/toggle/v/${blogId}`);
       const d = res.data;
       setBlog(prev => prev ? { ...prev, likeCount: d.likeCount, isLiked: d.isLiked } : null);
-      socketRef.current?.emit("like-blog", { blogId, likeCount: d.likeCount, isLiked: d.isLiked });
     } catch (err) { console.error(err); }
   };
 
