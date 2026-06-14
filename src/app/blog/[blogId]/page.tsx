@@ -80,7 +80,7 @@ function Avatar({ src, alt, size = 36 }: { src?: string; alt: string; size?: num
 }
 
 const SingleBlogPage = () => {
-  const socket = io("http://localhost:3000");
+  const socketRef = useRef<ReturnType<typeof io> | null>(null);
   const { blogId } = useParams() as { blogId: string };
   const [published, setPublished] = useState(true);
   const [toggleLoading, setToggleLoading] = useState(false);
@@ -101,41 +101,36 @@ const SingleBlogPage = () => {
 
   useEffect(() => {
     if (!blogId) return;
+    const socket = io("http://localhost:3000");
+    socketRef.current = socket;
     socket.emit("join-blog", blogId);
     const handleBlogLiked = (data: { blogId: string; likeCount: number }) => {
       if (data.blogId === blogId)
         setBlog((prev) => prev ? { ...prev, likeCount: data.likeCount } : null);
     };
     socket.on("blog-liked", handleBlogLiked);
-    return () => { socket.off("blog-liked", handleBlogLiked); };
+    return () => {
+      socket.off("blog-liked", handleBlogLiked);
+      socket.disconnect();
+      socketRef.current = null;
+    };
   }, [blogId]);
 
   useEffect(() => {
-    const fetchBlog = async () => {
-      try {
-        setLoading(true);
-        const res = await axiosInstance.get(`/blog/${blogId}`);
-        setBlog(res.data.data);
-        setPublished(res.data.data?.published ?? true);
-        setIsFollowing(res.data.data?.author?.isFollowing ?? false);
-      } catch (err) { console.error(err); }
-      finally { setLoading(false); }
-    };
-    const fetchComments = async () => {
-      try {
-        setLoadingComments(true);
-        const res = await axiosInstance.get(`/comments/${blogId}`);
-        setComments(res.data.data);
-      } catch (err) { console.error(err); }
-      finally { setLoadingComments(false); }
-    };
-    const fetchCurrentUser = async () => {
-      try {
-        const res = await axiosInstance.get("/users/current-user");
-        setCurrentUser(res.data.data);
-      } catch {}
-    };
-    if (blogId) { fetchBlog(); fetchComments(); fetchCurrentUser(); }
+    if (!blogId) return;
+    setLoading(true);
+    Promise.all([
+      axiosInstance.get(`/blog/${blogId}`),
+      axiosInstance.get(`/comments/${blogId}`),
+      axiosInstance.get("/users/current-user").catch(() => null),
+    ]).then(([blogRes, commentsRes, userRes]) => {
+      setBlog(blogRes.data.data);
+      setPublished(blogRes.data.data?.published ?? true);
+      setIsFollowing(blogRes.data.data?.author?.isFollowing ?? false);
+      setComments(commentsRes.data.data);
+      if (userRes) setCurrentUser(userRes.data.data);
+    }).catch(err => console.error(err))
+      .finally(() => setLoading(false));
   }, [blogId]);
 
   const handleDeleteBlog = async () => {
@@ -154,7 +149,7 @@ const SingleBlogPage = () => {
       const res = await axiosInstance.post(`/likes/toggle/v/${blogId}`);
       const d = res.data;
       setBlog(prev => prev ? { ...prev, likeCount: d.likeCount, isLiked: d.isLiked } : null);
-      socket.emit("like-blog", { blogId, likeCount: d.likeCount, isLiked: d.isLiked });
+      socketRef.current?.emit("like-blog", { blogId, likeCount: d.likeCount, isLiked: d.isLiked });
     } catch (err) { console.error(err); }
   };
 
