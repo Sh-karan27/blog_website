@@ -123,7 +123,7 @@ export default function HomeContent() {
 
       {/* ══════════ HERO ══════════ */}
       <section
-        style={{ background: "linear-gradient(135deg,#FDF6F0 0%,#FBF0E8 60%,#FDF4EE 100%)", borderBottom: `1px solid ${T.border}` }}
+        style={{ background: "repeating-linear-gradient(-45deg, rgba(195,155,135,0.15) 0px, rgba(195,155,135,0.15) 1px, #FFFFFF 1px, #FFFFFF 20px)" }}
         aria-label="Featured article"
       >
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 24px" }}>
@@ -203,16 +203,14 @@ export default function HomeContent() {
 
       {/* ══════════ TRENDING BAR ══════════ */}
       {trending.length > 0 && (
-        <div role="region" aria-label="Trending articles" style={{ background: T.surface, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
-          {/* label row */}
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
+        <div role="region" aria-label="Trending articles" style={{ background: T.surface }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+            {/* label row */}
             <div style={{ padding: "12px 0" }}>
               <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 700, color: T.muted }}>Trending Now</span>
             </div>
-          </div>
-          {/* full-width separator + items row */}
-          <div style={{ borderTop: `1px solid ${T.border}` }}>
-            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex" }}>
+            {/* separator + items row */}
+            <div style={{ borderTop: `1px solid ${T.border}`, display: "flex" }}>
               {trending.map((post, idx) => (
                 <TrendingItem key={post._id} post={post} idx={idx} total={trending.length} />
               ))}
