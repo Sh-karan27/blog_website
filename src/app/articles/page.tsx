@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
-import { Heart, MessageSquare, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, MessageSquare, Eye, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ACCENT = "#995F2F";
 const ACCENT2 = "#7A4A22";
@@ -123,6 +123,19 @@ export default function ArticlesPage() {
         .search-input { outline: none; }
         @media (max-width: 900px) { .articles-layout { grid-template-columns: 1fr !important; } .sidebar { display: none; } .mobile-search { display: block !important; } }
         @media (max-width: 600px) { .article-card-grid { grid-template-columns: 100px 1fr !important; gap: 12px !important; } .ac-body { padding: 0 12px !important; } }
+        .ink-tip { position: relative; cursor: default; }
+        .ink-tip::after {
+          content: attr(data-tip);
+          position: absolute; bottom: calc(100% + 6px); left: 50%;
+          transform: translateX(-50%) scale(0.9);
+          background: #1A1A1A; color: #fff;
+          font-size: 11px; font-weight: 600; white-space: nowrap;
+          padding: 4px 8px; border-radius: 6px;
+          pointer-events: none; opacity: 0;
+          transition: opacity 0.15s, transform 0.15s;
+          z-index: 99;
+        }
+        .ink-tip:hover::after { opacity: 1; transform: translateX(-50%) scale(1); }
       `}</style>
 
       {/* Page header */}
@@ -364,6 +377,10 @@ function ArticleCard({ blog, first, onClick }: { blog: BlogCard; first: boolean;
             <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
               <MessageSquare size={12} />
               {fmtNum(blog.commentCount)}
+            </span>
+            <span className="ink-tip" data-tip={`${blog.views} views`} style={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <Eye size={12} />
+              {fmtNum(blog.views)}
             </span>
           </div>
         </div>

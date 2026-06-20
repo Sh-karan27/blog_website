@@ -1,6 +1,6 @@
 "use client";
 import axiosInstance from "@/lib/axios";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const InkDrop = ({ className }: { className?: string }) => (
@@ -53,6 +53,7 @@ const Navbar = () => {
     }
   };
 
+  const pathname = usePathname();
   const profileHref = userId ? `/profile/${userId}` : "/settings";
 
   if (!mounted) return null;
@@ -73,18 +74,39 @@ const Navbar = () => {
             </div>
 
             {/* Desktop nav links */}
-            <nav className="hidden lg:flex items-center gap-5 text-sm font-medium">
+            <nav id="inkwell-desktop-nav" style={{ display: "none", alignItems: "center", gap: 12 }}>
               {[
                 { label: "Home", href: "/" },
                 { label: "Articles", href: "/articles" },
-                { label: "My Profile", href: profileHref },
-                { label: "Settings", href: "/settings" },
-              ].map((item) => (
-                <a key={item.label} href={item.href} className="text-white/80 hover:text-white transition-colors whitespace-nowrap">
-                  {item.label}
-                </a>
-              ))}
+                { label: "About", href: "/about" },
+                { label: "Contact", href: "/contact" },
+              ].map((item) => {
+                const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    style={{
+                      color: isActive ? "#fff" : "rgba(255,255,255,0.8)",
+                      fontSize: 13, fontWeight: isActive ? 700 : 500,
+                      textDecoration: "none", whiteSpace: "nowrap",
+                      padding: "4px 12px", borderRadius: 6,
+                      background: isActive ? "rgba(255,255,255,0.18)" : "transparent",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; } }}
+                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.background = "transparent"; } }}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
             </nav>
+            <style>{`
+              @media (min-width: 768px) {
+                #inkwell-desktop-nav { display: flex !important; }
+              }
+            `}</style>
           </div>
 
           {/* Right: Write + Avatar + Hamburger */}
@@ -185,6 +207,8 @@ const Navbar = () => {
             { label: "Home", href: "/" },
             { label: "Articles", href: "/articles" },
             { label: "Write", href: "/write" },
+            { label: "About", href: "/about" },
+            { label: "Contact", href: "/contact" },
             { label: "My Profile", href: profileHref },
             { label: "Settings", href: "/settings" },
           ].map((item, i) => (

@@ -70,6 +70,21 @@ function CommentSVG() {
     </svg>
   );
 }
+function EyeSVG() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13 }}>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <span className="ink-tip" data-tip={label} style={{ position: "relative" }}>
+      {children}
+    </span>
+  );
+}
 
 function Avatar({ user, size = 28, fontSize = 10 }: { user: any; size?: number; fontSize?: number }) {
   return (
@@ -97,8 +112,8 @@ export default function HomeContent() {
       try {
         const res = await axiosInstance.get("/blog", { params: { page: 1, limit: 10, query: "a" } });
         if (res.data?.statusCode === 200) {
-          setBlogs(res.data.data);
-          setHasMore(res.data.hasMore);
+          setBlogs(res.data.data.blogs);
+          setHasMore(res.data.data.pagination.hasMore);
         }
       } catch {}
     })();
@@ -120,6 +135,23 @@ export default function HomeContent() {
 
   return (
     <div style={{ background: T.bg, color: T.text, minHeight: "100vh" }}>
+      <style>{`
+        .ink-tip { cursor: default; }
+        .ink-tip::after {
+          content: attr(data-tip);
+          position: absolute; bottom: calc(100% + 6px); left: 50%;
+          transform: translateX(-50%) scale(0.9);
+          background: #1A1A1A; color: #fff;
+          font-size: 11px; font-weight: 600; white-space: nowrap;
+          padding: 4px 8px; border-radius: 6px;
+          pointer-events: none; opacity: 0;
+          transition: opacity 0.15s, transform 0.15s;
+          z-index: 99;
+        }
+        .ink-tip:hover::after {
+          opacity: 1; transform: translateX(-50%) scale(1);
+        }
+      `}</style>
 
       {/* ══════════ HERO ══════════ */}
       <section
@@ -161,6 +193,12 @@ export default function HomeContent() {
                   <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <HeartSVG /> {featured.likeCount ?? 0}
                   </span>
+                  <span>·</span>
+                  <Tip label={`${featured.views ?? 0} views`}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <EyeSVG /> {featured.views ?? 0}
+                    </span>
+                  </Tip>
                 </div>
 
                 <Link
@@ -414,6 +452,9 @@ function BlogCard({ post }: { post: any }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, color: T.muted }}>
             <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12 }}><HeartSVG />{post.likeCount ?? 0}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12 }}><CommentSVG />{post.commentCount ?? 0}</span>
+            <Tip label={`${post.views ?? 0} views`}>
+              <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12 }}><EyeSVG />{post.views ?? 0}</span>
+            </Tip>
           </div>
         </div>
       </div>

@@ -5,11 +5,13 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { FiBold, FiItalic, FiLink, FiImage } from "react-icons/fi";
 import { LuHeading1, LuHeading2 } from "react-icons/lu";
 import { RiDoubleQuotesL } from "react-icons/ri";
 import { FiList } from "react-icons/fi";
+import { ArrowLeft } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 
 const ACCENT  = "#995F2F";
@@ -18,21 +20,27 @@ const BORDER  = "#E5E5E5";
 const MUTED   = "#666666";
 const SURFACE = "#F5F5F5";
 
-export default function WritePage() {
-  const [coverImage, setCoverImage]       = useState<string | null>(null);
+export default function EditBlogPage() {
+  const { blogId } = useParams() as { blogId: string };
+  const router = useRouter();
+
+  const [loadingBlog, setLoadingBlog]       = useState(true);
+  const [notOwner, setNotOwner]             = useState(false);
+
+  const [coverImageUrl, setCoverImageUrl]   = useState<string | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
-  const [title, setTitle]                 = useState("");
-  const [subtitle, setSubtitle]           = useState("");
-  const [tags, setTags]                   = useState<string[]>([]);
-  const [tagInput, setTagInput]           = useState("");
-  const [isPublishing, setIsPublishing]   = useState(false);
-  const [publishError, setPublishError]   = useState<string | null>(null);
-  const [publishSuccess, setPublishSuccess] = useState(false);
-  const [contentImages, setContentImages] = useState<File[]>([]);
+  const [title, setTitle]                   = useState("");
+  const [subtitle, setSubtitle]             = useState("");
+  const [tags, setTags]                     = useState<string[]>([]);
+  const [tagInput, setTagInput]             = useState("");
+  const [isSaving, setIsSaving]             = useState(false);
+  const [saveError, setSaveError]           = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess]       = useState(false);
+  const [contentImages, setContentImages]   = useState<File[]>([]);
+  const [, forceUpdate]                     = useState({});
 
   const fileInputRef        = useRef<HTMLInputElement>(null);
   const editorImageInputRef = useRef<HTMLInputElement>(null);
-  const [, forceUpdate]     = useState({});
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -51,31 +59,91 @@ export default function WritePage() {
     onSelectionUpdate: () => forceUpdate({}),
   });
 
+  // Fetch blog + current user, guard ownership
+  useEffect(() => {
+    if (!blogId) return;
+    const load = async () => {
+      try {
+        setLoadingBlog(true);
+        const [blogRes, userRes] = await Promise.all([
+          axiosInstance.get(`/blog/${blogId}`),
+          axiosInstance.get("/users/current-user").catch(() => null),
+        ]);
+        const blog = blogRes.data.data;
+        const user = userRes?.data?.data;
+
+        if (!user || user._id !== blog.author._id) {
+          setNotOwner(true);
+          return;
+        }
+
+        setTitle(blog.title ?? "");
+        setSubtitle(blog.description ?? "");
+        setTags(blog.tag ?? []);
+        setCoverImageUrl(blog.coverImage?.url ?? null);
+
+        if (editor && blog.content) {
+          editor.commands.setContent(blog.content);
+        }
+      } catch (err) {
+        console.error("Failed to load blog for editing:", err);
+      } finally {
+        setLoadingBlog(false);
+      }
+    };
+    load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blogId]);
+
+  // Set editor content after editor is ready
+  useEffect(() => {
+    if (!editor || !loadingBlog) return;
+    // re-attempt if editor wasn't ready during first fetch
+    const trySet = async () => {
+      try {
+        const res = await axiosInstance.get(`/blog/${blogId}`);
+        const html = res.data.data?.content;
+        if (html) editor.commands.setContent(html);
+      } catch { /* already loaded */ }
+    };
+    trySet();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
+
+  if (notOwner) {
+    router.replace(`/blog/${blogId}`);
+    return null;
+  }
+
   const wordCount = editor ? editor.getText().trim().split(/\s+/).filter(Boolean).length : 0;
   const minRead   = Math.max(1, Math.ceil(wordCount / 200));
 
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) { setCoverImageFile(file); setCoverImage(URL.createObjectURL(file)); }
+    if (file) {
+      setCoverImageFile(file);
+      setCoverImageUrl(URL.createObjectURL(file));
+    }
   };
 
   const handleEditorImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !editor) return;
-    if (contentImages.length >= 3) { alert("Max 3 images."); return; }
+    if (contentImages.length >= 3) { alert("Max 3 images per edit."); return; }
     const index = contentImages.length;
     setContentImages(prev => [...prev, file]);
     editor.chain().focus().setImage({ src: URL.createObjectURL(file), alt: `__IMAGE_${index}__` }).run();
   };
 
-  const handlePublish = async () => {
-    setPublishError(null);
-    setPublishSuccess(false);
+  const handleSave = async () => {
+    setSaveError(null);
+    setSaveSuccess(false);
     const content     = editor?.getHTML() ?? "";
     const textContent = editor?.getText().trim() ?? "";
-    if (!title.trim())     return setPublishError("Title is required.");
-    if (!subtitle.trim())  return setPublishError("Description is required.");
-    if (!textContent)      return setPublishError("Content cannot be empty.");
+    if (!title.trim())    return setSaveError("Title is required.");
+    if (!subtitle.trim()) return setSaveError("Description is required.");
+    if (!textContent)     return setSaveError("Content cannot be empty.");
+
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("description", subtitle.trim());
@@ -83,35 +151,31 @@ export default function WritePage() {
     tags.forEach(t => formData.append("tag[]", t));
     if (coverImageFile) formData.append("coverImage", coverImageFile);
     contentImages.forEach(f => formData.append("content_images", f));
+
     try {
-      setIsPublishing(true);
-      await axiosInstance.post("/blog/", formData, { headers: { "Content-Type": "multipart/form-data" } });
-      setPublishSuccess(true);
+      setIsSaving(true);
+      await axiosInstance.patch(`/blog/${blogId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setSaveSuccess(true);
+      setTimeout(() => router.push(`/blog/${blogId}`), 800);
     } catch (err: any) {
-      setPublishError(err?.response?.data?.message || "Something went wrong.");
+      setSaveError(err?.response?.data?.message || "Something went wrong.");
     } finally {
-      setIsPublishing(false);
+      setIsSaving(false);
     }
   };
 
-  const toggleBold      = useCallback(() => editor?.chain().focus().toggleBold().run(), [editor]);
-  const toggleItalic    = useCallback(() => editor?.chain().focus().toggleItalic().run(), [editor]);
-  const toggleH1        = useCallback(() => editor?.chain().focus().toggleHeading({ level: 1 }).run(), [editor]);
-  const toggleH2        = useCallback(() => editor?.chain().focus().toggleHeading({ level: 2 }).run(), [editor]);
+  const toggleBold       = useCallback(() => editor?.chain().focus().toggleBold().run(), [editor]);
+  const toggleItalic     = useCallback(() => editor?.chain().focus().toggleItalic().run(), [editor]);
+  const toggleH1         = useCallback(() => editor?.chain().focus().toggleHeading({ level: 1 }).run(), [editor]);
+  const toggleH2         = useCallback(() => editor?.chain().focus().toggleHeading({ level: 2 }).run(), [editor]);
   const toggleBlockquote = useCallback(() => editor?.chain().focus().toggleBlockquote().run(), [editor]);
-  const toggleList      = useCallback(() => editor?.chain().focus().toggleBulletList().run(), [editor]);
-  const setLink         = useCallback(() => {
+  const toggleList       = useCallback(() => editor?.chain().focus().toggleBulletList().run(), [editor]);
+  const setLink          = useCallback(() => {
     const url = window.prompt("Enter URL");
     if (url) editor?.chain().focus().setLink({ href: url }).run();
   }, [editor]);
-
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && tagInput.trim()) {
-      if (!tags.includes(tagInput.trim())) setTags(prev => [...prev, tagInput.trim()]);
-      setTagInput("");
-    }
-    if (e.key === "Backspace" && !tagInput && tags.length > 0) setTags(tags.slice(0, -1));
-  };
 
   const tbBtn = (active: boolean) => ({
     display: "flex" as const, alignItems: "center" as const, justifyContent: "center" as const,
@@ -120,6 +184,15 @@ export default function WritePage() {
     color: active ? "#fff" : MUTED,
     transition: "all 0.15s",
   });
+
+  if (loadingBlog) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
+        <div style={{ width: 32, height: 32, border: `3px solid ${ACCENT}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: "#fff", color: "#171C20", minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
@@ -139,6 +212,7 @@ export default function WritePage() {
         .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: #CCC; pointer-events: none; height: 0; }
         .cover-upload:hover .cover-overlay { opacity: 1 !important; }
         .tag-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(153,95,47,0.12); color: ${ACCENT}; border: 1px solid rgba(153,95,47,0.2); }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
       {/* Hidden file inputs */}
@@ -149,17 +223,23 @@ export default function WritePage() {
       <section style={{ borderBottom: `1px solid ${BORDER}`, background: "#FAFAFA" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: ACCENT, marginBottom: 8 }}>New Story</p>
-            <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.03em", color: "#171C20" }}>Write a Story</h1>
+            <button
+              onClick={() => router.push(`/blog/${blogId}`)}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: MUTED, background: "transparent", border: "none", cursor: "pointer", padding: "0 0 10px", fontFamily: "inherit", transition: "color 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#1A1A1A"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = MUTED; }}
+            >
+              <ArrowLeft size={14} /> Back to article
+            </button>
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: ACCENT, marginBottom: 8 }}>Editing</p>
+              <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.03em", color: "#171C20" }}>Edit Story</h1>
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {wordCount > 0 && (
               <span style={{ fontSize: 12, color: MUTED, fontWeight: 500 }}>{wordCount} words · {minRead} min read</span>
             )}
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", display: "inline-block" }} />
-              <span style={{ fontSize: 12, color: MUTED }}>Draft saved</span>
-            </div>
           </div>
         </div>
       </section>
@@ -224,14 +304,14 @@ export default function WritePage() {
             <EditorContent editor={editor} className="tiptap" />
 
             {/* Error / success */}
-            {publishError && (
+            {saveError && (
               <div style={{ marginTop: 20, padding: "12px 16px", background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 8, fontSize: 13, color: "#DC2626" }}>
-                {publishError}
+                {saveError}
               </div>
             )}
-            {publishSuccess && (
+            {saveSuccess && (
               <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(34,197,94,0.08)", border: "1px solid #86EFAC", borderRadius: 8, fontSize: 13, color: "#16A34A", fontWeight: 600 }}>
-                Story published successfully!
+                Changes saved! Redirecting…
               </div>
             )}
           </div>
@@ -249,9 +329,9 @@ export default function WritePage() {
                 onClick={() => fileInputRef.current?.click()}
                 style={{ position: "relative", cursor: "pointer", aspectRatio: "16/9", background: "#EEE" }}
               >
-                {coverImage ? (
+                {coverImageUrl ? (
                   <>
-                    <img src={coverImage} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    <img src={coverImageUrl} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                     <div className="cover-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", opacity: 0, transition: "opacity 0.2s", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <span style={{ color: "#fff", fontSize: 12, fontWeight: 600, background: "rgba(0,0,0,0.5)", padding: "6px 14px", borderRadius: 6 }}>Change</span>
                     </div>
@@ -275,7 +355,12 @@ export default function WritePage() {
                   {tags.map((tag, i) => (
                     <span key={i} className="tag-pill">
                       {tag}
-                      <button onClick={() => setTags(tags.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", padding: 0, lineHeight: 1, fontSize: 14 }}>×</button>
+                      <button
+                        onClick={() => setTags(tags.filter((_, j) => j !== i))}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", padding: 0, lineHeight: 1, fontSize: 14 }}
+                      >
+                        ×
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -316,26 +401,40 @@ export default function WritePage() {
               </div>
             )}
 
-            {/* Publish */}
+            {/* Save */}
             <button
-              onClick={handlePublish}
-              disabled={isPublishing}
+              onClick={handleSave}
+              disabled={isSaving}
               style={{
                 width: "100%", padding: "13px", borderRadius: 10, border: "none",
-                background: isPublishing ? "#C8A882" : ACCENT,
+                background: isSaving ? "#C8A882" : ACCENT,
                 color: "#fff", fontSize: 14, fontWeight: 700,
-                cursor: isPublishing ? "not-allowed" : "pointer",
+                cursor: isSaving ? "not-allowed" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 transition: "background 0.15s",
               }}
-              onMouseEnter={e => { if (!isPublishing) e.currentTarget.style.background = ACCENT2; }}
-              onMouseLeave={e => { if (!isPublishing) e.currentTarget.style.background = ACCENT; }}
+              onMouseEnter={e => { if (!isSaving) e.currentTarget.style.background = ACCENT2; }}
+              onMouseLeave={e => { if (!isSaving) e.currentTarget.style.background = ACCENT; }}
             >
-              {isPublishing && <div style={{ width: 15, height: 15, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />}
-              {isPublishing ? "Publishing…" : "Publish Story"}
+              {isSaving && <div style={{ width: 15, height: 15, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />}
+              {isSaving ? "Saving…" : "Save Changes"}
             </button>
 
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            {/* Discard */}
+            <button
+              onClick={() => router.push(`/blog/${blogId}`)}
+              style={{
+                width: "100%", padding: "11px", borderRadius: 10,
+                border: `1.5px solid ${BORDER}`, background: "transparent",
+                color: MUTED, fontSize: 13, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#CCCCCC"; e.currentTarget.style.color = "#1A1A1A"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MUTED; }}
+            >
+              Discard Changes
+            </button>
+
           </aside>
         </div>
       </div>
