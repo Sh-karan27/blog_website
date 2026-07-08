@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -7,64 +7,260 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
+  ::selection {
+    background: #18181b;
+    color: #fff;
+  }
+  .dark ::selection {
+    background: #f4f4f5;
+    color: #09090b;
+  }
+
   *:focus-visible {
-    outline: 2px solid #985F2E;
+    outline: 2px solid #18181b;
     outline-offset: 2px;
   }
-}
-
-@layer components {
-  .btn-ink {
-    @apply bg-[#985F2E] text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-[#7A4A22] active:translate-y-px transition-all shadow-sm;
-  }
-
-  .btn-ink-outline {
-    @apply border border-[#985F2E] text-[#985F2E] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#985F2E] hover:text-white transition-all;
-  }
-
-  .input-ink {
-    @apply w-full px-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#985F2E]/30 focus:border-[#985F2E] transition-all;
+  .dark *:focus-visible {
+    outline-color: #f4f4f5;
   }
 }
 
-/* Tiptap editor placeholder */
+/* ── Inkwell Mono image placeholder ── */
+.img-ph {
+  background: linear-gradient(135deg, #fafafa 0%, #e8e8ea 55%, #d9d9dc 100%);
+  position: relative;
+}
+.img-ph::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.85), transparent 55%);
+  pointer-events: none;
+}
+.dark .img-ph {
+  background: linear-gradient(135deg, #1e1e22 0%, #17171a 55%, #101013 100%);
+}
+.dark .img-ph::after {
+  background: radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.06), transparent 55%);
+}
+
+/* ── Card cover hover zoom ── */
+.card-media {
+  overflow: hidden;
+}
+.card-media > div,
+.card-media > img {
+  transition: transform 0.7s cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.group:hover .card-media > div,
+.group:hover .card-media > img {
+  transform: scale(1.045);
+}
+
+/* ── Tiptap editor ── */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: #999;
+  color: #d4d4d8;
   pointer-events: none;
   height: 0;
-  font-style: italic;
+}
+.dark .tiptap p.is-editor-empty:first-child::before {
+  color: #3f3f46;
 }
 .tiptap:focus {
   outline: none;
 }
+.tiptap {
+  font-size: 17px;
+  line-height: 1.75;
+  color: #3f3f46;
+}
+.dark .tiptap {
+  color: #d4d4d8;
+}
+.tiptap h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 40px 0 16px;
+  color: #18181b;
+}
+.tiptap h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 32px 0 14px;
+  color: #18181b;
+}
+.dark .tiptap h1,
+.dark .tiptap h2 {
+  color: #f4f4f5;
+}
+.tiptap p {
+  margin-bottom: 1.4em;
+}
+.tiptap blockquote {
+  border-left: 2px solid #18181b;
+  padding-left: 24px;
+  margin: 32px 0;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  color: #18181b;
+}
+.dark .tiptap blockquote {
+  border-left-color: #f4f4f5;
+  color: #f4f4f5;
+}
+.tiptap ul,
+.tiptap ol {
+  padding-left: 20px;
+  margin-bottom: 1.4em;
+}
+.tiptap ul {
+  list-style: disc;
+}
+.tiptap ol {
+  list-style: decimal;
+}
+.tiptap li {
+  margin-bottom: 6px;
+}
+.tiptap li::marker {
+  color: #d4d4d8;
+}
+.dark .tiptap li::marker {
+  color: #3f3f46;
+}
+.tiptap a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: #d4d4d8;
+}
+.dark .tiptap a {
+  text-decoration-color: #52525b;
+}
 .tiptap img {
   border-radius: 8px;
-  margin: 24px 0;
+  margin: 32px 0;
   width: 100%;
 }
+.tiptap pre {
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 32px 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+}
+.dark .tiptap pre {
+  background: #18181b;
+  border-color: #27272a;
+}
+.tiptap code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
 
-/* Prose overrides for blog reading */
+/* ── Prose overrides for blog reading (Inkwell Mono) ── */
+.inkwell-prose {
+  font-size: 17px;
+  line-height: 1.75;
+  color: #3f3f46;
+}
+.dark .inkwell-prose {
+  color: #d4d4d8;
+}
 .inkwell-prose h1,
 .inkwell-prose h2,
 .inkwell-prose h3 {
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  color: #111;
+  color: #18181b;
+  margin: 44px 0 18px;
+}
+.inkwell-prose h1 { font-size: 28px; }
+.inkwell-prose h2 { font-size: 24px; }
+.inkwell-prose h3 { font-size: 20px; }
+.dark .inkwell-prose h1,
+.dark .inkwell-prose h2,
+.dark .inkwell-prose h3 {
+  color: #f4f4f5;
+}
+.inkwell-prose p {
+  margin-bottom: 1.5em;
+}
+.inkwell-prose strong {
+  color: #18181b;
+}
+.dark .inkwell-prose strong {
+  color: #f4f4f5;
 }
 .inkwell-prose blockquote {
-  border-left: 3px solid #985F2E;
-  padding-left: 1rem;
-  font-style: italic;
-  color: #555;
-  background: #FBF7F4;
-  padding: 1rem 1.25rem;
-  border-radius: 0 6px 6px 0;
+  border-left: 2px solid #18181b;
+  padding-left: 24px;
+  margin: 40px 0;
+  font-size: 20px;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  color: #18181b;
+  background: transparent;
+}
+.dark .inkwell-prose blockquote {
+  border-left-color: #f4f4f5;
+  color: #f4f4f5;
 }
 .inkwell-prose a {
-  color: #985F2E;
+  color: inherit;
   text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: #d4d4d8;
+}
+.inkwell-prose a:hover {
+  text-decoration-color: currentColor;
+}
+.dark .inkwell-prose a {
+  text-decoration-color: #52525b;
+}
+.inkwell-prose ul,
+.inkwell-prose ol {
+  padding-left: 20px;
+  margin-bottom: 1.5em;
+}
+.inkwell-prose ul { list-style: disc; }
+.inkwell-prose ol { list-style: decimal; }
+.inkwell-prose li { margin-bottom: 8px; }
+.inkwell-prose li::marker { color: #d4d4d8; }
+.dark .inkwell-prose li::marker { color: #3f3f46; }
+.inkwell-prose img {
+  border-radius: 8px;
+  margin: 40px 0;
+  width: 100%;
+}
+.inkwell-prose pre {
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 32px 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+}
+.dark .inkwell-prose pre {
+  background: #18181b;
+  border-color: #27272a;
+}
+.inkwell-prose code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
 }
 
 @keyframes fadeIn {

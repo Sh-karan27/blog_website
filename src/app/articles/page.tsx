@@ -3,13 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
-import { Heart, MessageSquare, Eye, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
-
-const ACCENT = "#995F2F";
-const ACCENT2 = "#7A4A22";
-const BORDER = "#E5E5E5";
-const TEXT_MUTED = "#666666";
-const SURFACE_ALT = "#F5F5F5";
+import { Search } from "lucide-react";
 
 interface BlogCard {
   _id: string;
@@ -34,9 +28,9 @@ interface Pagination {
 }
 
 const SORT_OPTIONS = [
-  { label: "Most Recent", sortBy: "createdAt", sortType: "desc" },
-  { label: "Most Liked",  sortBy: "likeCount",  sortType: "desc" },
-  { label: "Most Viewed", sortBy: "views",       sortType: "desc" },
+  { label: "Most recent", sortBy: "createdAt", sortType: "desc" },
+  { label: "Most liked", sortBy: "likeCount", sortType: "desc" },
+  { label: "Most viewed", sortBy: "views", sortType: "desc" },
 ];
 
 const POPULAR_TAGS = ["Technology", "Design", "Development", "AI", "Startup", "Career", "Open Source", "Productivity"];
@@ -106,333 +100,263 @@ export default function ArticlesPage() {
   const pageNumbers = buildPageNumbers(page, totalPages);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif", color: "#171C20" }}>
-      <style>{`
-        .ac-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .ac-desc  { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .article-card:hover .ac-title-text { color: ${ACCENT}; }
-        .article-card { transition: background 0.15s; }
-        .article-card:hover { background: ${SURFACE_ALT}; border-radius: 12px; }
-        .sort-pill { transition: all 0.15s; }
-        .sort-pill:hover { background: ${SURFACE_ALT}; color: #1A1A1A; }
-        .tag-chip { transition: all 0.15s; cursor: pointer; }
-        .tag-chip:hover { background: rgba(153,95,47,0.1); color: ${ACCENT}; border-color: rgba(153,95,47,0.25); }
-        .page-btn { transition: all 0.15s; }
-        .page-btn:hover:not(:disabled):not(.active) { background: ${SURFACE_ALT}; color: #1A1A1A; }
-        .search-input:focus { border-color: ${ACCENT} !important; box-shadow: 0 0 0 3px rgba(153,95,47,0.12); }
-        .search-input { outline: none; }
-        @media (max-width: 900px) { .articles-layout { grid-template-columns: 1fr !important; } .sidebar { display: none; } .mobile-search { display: block !important; } }
-        @media (max-width: 600px) { .article-card-grid { grid-template-columns: 100px 1fr !important; gap: 12px !important; } .ac-body { padding: 0 12px !important; } }
-        .ink-tip { position: relative; cursor: default; }
-        .ink-tip::after {
-          content: attr(data-tip);
-          position: absolute; bottom: calc(100% + 6px); left: 50%;
-          transform: translateX(-50%) scale(0.9);
-          background: #1A1A1A; color: #fff;
-          font-size: 11px; font-weight: 600; white-space: nowrap;
-          padding: 4px 8px; border-radius: 6px;
-          pointer-events: none; opacity: 0;
-          transition: opacity 0.15s, transform 0.15s;
-          z-index: 99;
-        }
-        .ink-tip:hover::after { opacity: 1; transform: translateX(-50%) scale(1); }
-      `}</style>
+    <main className="max-w-6xl mx-auto px-6 py-12 min-h-screen">
+      {/* ══ HEADER ══ */}
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold tracking-[-0.02em] mb-2">All articles</h1>
+        <p className="text-sm text-zinc-500">
+          {pagination ? `${pagination.totalCount.toLocaleString()} stories` : "Loading…"}
+        </p>
+      </div>
 
-      {/* Page header */}
-      <header style={{ borderBottom: `1px solid ${BORDER}`, padding: "40px 0 32px", background: "#fff" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
-          <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-0.03em", color: "#171C20" }}>All Articles</h1>
-          <p style={{ fontSize: 14, color: TEXT_MUTED, marginTop: 6 }}>
-            {pagination ? `${pagination.totalCount.toLocaleString()} stories published` : "Loading…"}
-          </p>
-        </div>
-      </header>
-
-      {/* Mobile search bar */}
-      <div className="mobile-search" style={{ display: "none", padding: "16px 20px", borderBottom: `1px solid ${BORDER}` }}>
+      {/* Mobile search */}
+      <div className="lg:hidden mb-8">
         <SearchBox value={query} onChange={setQuery} />
       </div>
 
-      <main style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
-        <div className="articles-layout" style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 48, padding: "48px 0 80px", alignItems: "start" }}>
+      <div className="grid lg:grid-cols-[260px_1fr] gap-12 items-start">
+        {/* ══ SIDEBAR ══ */}
+        <aside className="hidden lg:block sticky top-24 space-y-8">
+          <SearchBox value={query} onChange={setQuery} />
 
-          {/* ── Sidebar ── */}
-          <aside className="sidebar" style={{ position: "sticky", top: 80 }}>
-            <div style={{ marginBottom: 32 }}>
-              <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: TEXT_MUTED, marginBottom: 12, display: "block" }}>Search</span>
-              <SearchBox value={query} onChange={setQuery} />
-            </div>
-
-            <div style={{ marginBottom: 32 }}>
-              <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: TEXT_MUTED, marginBottom: 12, display: "block" }}>Sort by</span>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {SORT_OPTIONS.map((opt, i) => (
-                  <button
-                    key={opt.label}
-                    className="sort-pill"
-                    onClick={() => handleSortChange(i)}
-                    style={{
-                      padding: "8px 12px", borderRadius: 8, fontSize: 13,
-                      fontWeight: activeSort === i ? 700 : 500,
-                      color: activeSort === i ? ACCENT : TEXT_MUTED,
-                      background: activeSort === i ? "rgba(153,95,47,0.1)" : "transparent",
-                      border: "none", textAlign: "left", width: "100%", cursor: "pointer",
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: TEXT_MUTED, marginBottom: 12, display: "block" }}>Popular Tags</span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                {POPULAR_TAGS.map(tag => (
-                  <button
-                    key={tag}
-                    className="tag-chip"
-                    onClick={() => handleTagClick(tag)}
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: 5,
-                      padding: "4px 10px", borderRadius: 9999,
-                      fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase",
-                      background: activeTag === tag ? "rgba(153,95,47,0.18)" : SURFACE_ALT,
-                      color: activeTag === tag ? ACCENT : TEXT_MUTED,
-                      border: `1px solid ${activeTag === tag ? ACCENT : BORDER}`,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          {/* ── Main content ── */}
           <div>
-            {/* Active filter chip */}
-            {activeTag && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: TEXT_MUTED }}>Filtered by:</span>
+            <p className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-400 mb-3">Sort by</p>
+            <div className="flex flex-col gap-1 text-sm" role="radiogroup" aria-label="Sort order">
+              {SORT_OPTIONS.map((opt, i) => (
+                <button
+                  key={opt.label}
+                  onClick={() => handleSortChange(i)}
+                  role="radio"
+                  aria-checked={activeSort === i}
+                  className={
+                    activeSort === i
+                      ? "text-left px-3 py-1.5 rounded-md font-medium bg-zinc-100 dark:bg-zinc-900"
+                      : "text-left px-3 py-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                  }
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-400 mb-3">Popular tags</p>
+            <div className="flex flex-wrap gap-1.5">
+              {POPULAR_TAGS.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagClick(tag)}
+                  className={
+                    activeTag === tag
+                      ? "px-2.5 py-1 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium"
+                      : "px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300 hover:border-zinc-900 dark:hover:border-zinc-100 transition-colors"
+                  }
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        {/* ══ RESULTS ══ */}
+        <div>
+          {/* Active filter chip */}
+          {activeTag && (
+            <div className="flex items-center gap-2 mb-6">
+              <span className="text-xs text-zinc-400">Filtered by</span>
+              <span className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-900 text-xs font-medium">
+                {activeTag}
                 <button
                   onClick={clearTag}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "5px 12px", background: "rgba(153,95,47,0.18)", color: ACCENT,
-                    border: `1px solid rgba(153,95,47,0.3)`, borderRadius: 9999,
-                    fontSize: 12, fontWeight: 700, cursor: "pointer",
-                  }}
+                  className="w-4 h-4 rounded flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+                  aria-label="Clear tag filter"
                 >
-                  {activeTag}
-                  <X size={12} strokeWidth={2.5} />
+                  ✕
                 </button>
-              </div>
-            )}
-
-            {/* Article list */}
-            <div role="list">
-              {loading ? (
-                <ArticleSkeletons />
-              ) : blogs.length === 0 ? (
-                <EmptyState query={debouncedQuery} tag={activeTag} onClear={() => { setQuery(""); setDebouncedQuery(""); setActiveTag(null); }} />
-              ) : (
-                blogs.map((blog, i) => (
-                  <ArticleCard key={blog._id} blog={blog} first={i === 0} onClick={() => router.push(`/blog/${blog._id}`)} />
-                ))
-              )}
+              </span>
             </div>
+          )}
 
-            {/* Pagination */}
-            {!loading && pagination && totalPages > 1 && (
-              <nav style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 48 }} aria-label="Pagination">
-                <button
-                  className="page-btn"
-                  onClick={() => setPage(p => p - 1)}
-                  disabled={page === 1}
-                  style={pageBtnStyle(false, page === 1)}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                {pageNumbers.map((p, i) =>
-                  p === "…" ? (
-                    <span key={`ellipsis-${i}`} style={{ padding: "0 4px", color: TEXT_MUTED, fontSize: 13 }}>…</span>
-                  ) : (
-                    <button
-                      key={p}
-                      className={`page-btn${page === p ? " active" : ""}`}
-                      onClick={() => setPage(p as number)}
-                      aria-current={page === p ? "page" : undefined}
-                      style={pageBtnStyle(page === p, false)}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-                <button
-                  className="page-btn"
-                  onClick={() => setPage(p => p + 1)}
-                  disabled={page === totalPages}
-                  style={pageBtnStyle(false, page === totalPages)}
-                  aria-label="Next page"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              </nav>
-            )}
-          </div>
+          {/* Article list */}
+          {loading ? (
+            <ArticleSkeletons />
+          ) : blogs.length === 0 ? (
+            <EmptyState
+              query={debouncedQuery}
+              tag={activeTag}
+              onClear={() => { setQuery(""); setDebouncedQuery(""); setActiveTag(null); }}
+            />
+          ) : (
+            <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              {blogs.map((blog, i) => (
+                <ArticleRow key={blog._id} blog={blog} first={i === 0} onClick={() => router.push(`/blog/${blog._id}`)} />
+              ))}
+            </div>
+          )}
+
+          {/* ══ PAGINATION ══ */}
+          {!loading && pagination && totalPages > 1 && (
+            <nav
+              className="flex items-center justify-center gap-1 mt-10 pt-8 border-t border-zinc-200 dark:border-zinc-800"
+              aria-label="Pagination"
+            >
+              <button
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 1}
+                className={`h-8 px-3 rounded-md text-sm ${
+                  page === 1
+                    ? "text-zinc-300 dark:text-zinc-700 cursor-not-allowed"
+                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                }`}
+              >
+                ← Prev
+              </button>
+              {pageNumbers.map((p, i) =>
+                p === "…" ? (
+                  <span key={`ellipsis-${i}`} className="px-1 text-zinc-400 text-sm">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    aria-current={page === p ? "page" : undefined}
+                    className={
+                      page === p
+                        ? "w-8 h-8 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium"
+                        : "w-8 h-8 rounded-md text-sm text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                    }
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page === totalPages}
+                className={`h-8 px-3 rounded-md text-sm ${
+                  page === totalPages
+                    ? "text-zinc-300 dark:text-zinc-700 cursor-not-allowed"
+                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                }`}
+              >
+                Next →
+              </button>
+            </nav>
+          )}
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
 
 /* ── Search box ── */
 function SearchBox({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div style={{ position: "relative" }}>
-      <Search size={15} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: TEXT_MUTED, pointerEvents: "none" }} />
+    <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm focus-within:ring-2 focus-within:ring-zinc-900 dark:focus-within:ring-zinc-100 focus-within:border-transparent transition-shadow">
+      <Search size={13} className="text-zinc-400 shrink-0" />
       <input
-        type="search"
+        type="text"
         value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder="Search articles…"
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search…"
         aria-label="Search articles"
-        className="search-input"
-        style={{
-          width: "100%", padding: "9px 12px 9px 38px",
-          border: `1.5px solid ${BORDER}`, borderRadius: 8,
-          fontSize: 13, fontFamily: "inherit",
-          background: "#fff", color: "#1A1A1A",
-          transition: "border-color 0.15s, box-shadow 0.15s",
-        }}
+        className="flex-1 bg-transparent outline-none placeholder:text-zinc-400 min-w-0"
       />
     </div>
   );
 }
 
-/* ── Article card ── */
-function ArticleCard({ blog, first, onClick }: { blog: BlogCard; first: boolean; onClick: () => void }) {
+/* ── Article row ── */
+function ArticleRow({ blog, first, onClick }: { blog: BlogCard; first: boolean; onClick: () => void }) {
   const author = blog.authorDetails;
   return (
-    <div
-      role="listitem"
-      className="article-card"
-      onClick={onClick}
-      style={{
-        display: "grid", cursor: "pointer",
-        borderBottom: `1px solid ${BORDER}`,
-        borderTop: first ? `1px solid ${BORDER}` : undefined,
-        padding: "24px 0",
-      }}
+    <a
+      onClick={(e) => { e.preventDefault(); onClick(); }}
+      href={`/blog/${blog._id}`}
+      className={`group grid sm:grid-cols-[200px_1fr] gap-6 py-7 cursor-pointer ${first ? "first:pt-0" : ""}`}
     >
-      <div className="article-card-grid" style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 0 }}>
-        {/* Thumbnail */}
-        <div style={{ aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: SURFACE_ALT, flexShrink: 0 }}>
-          {blog.coverImage?.url ? (
-            <img src={blog.coverImage.url} alt={blog.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          ) : (
-            <div style={{ width: "100%", height: "100%", background: `repeating-linear-gradient(-45deg, #EFEFEF 0, #EFEFEF 1.5px, #F8F9FA 1.5px, #F8F9FA 14px)` }} />
-          )}
+      {/* Thumbnail */}
+      {blog.coverImage?.url ? (
+        <div className="aspect-video sm:aspect-[4/3] rounded-md overflow-hidden">
+          <img src={blog.coverImage.url} alt={blog.title} className="w-full h-full object-cover" />
         </div>
+      ) : (
+        <div className="img-ph aspect-video sm:aspect-[4/3] rounded-md flex items-center justify-center">
+          <span className="font-mono text-[10px] text-zinc-400">cover</span>
+        </div>
+      )}
 
-        {/* Body */}
-        <div className="ac-body" style={{ padding: "0 20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div>
-            {/* Tags */}
-            {blog.tag && blog.tag.length > 0 && (
-              <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-                {blog.tag.slice(0, 2).map(t => (
-                  <span key={t} style={{ display: "inline-flex", padding: "2px 8px", borderRadius: 9999, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", background: "rgba(153,95,47,0.12)", color: ACCENT, border: "1px solid rgba(153,95,47,0.2)" }}>
-                    {t}
-                  </span>
-                ))}
-              </div>
-            )}
-            {/* Title */}
-            <div className="ac-title" style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.015em", lineHeight: 1.3, marginBottom: 8 }}>
-              <span className="ac-title-text" style={{ transition: "color 0.15s" }}>{blog.title}</span>
-            </div>
-            {/* Description */}
-            <div className="ac-desc" style={{ fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 16 }}>
-              {blog.description}
-            </div>
+      {/* Body */}
+      <div className="min-w-0">
+        {blog.tag && blog.tag.length > 0 && (
+          <div className="flex gap-1.5 mb-2.5">
+            {blog.tag.slice(0, 2).map((t) => (
+              <span key={t} className="px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                {t}
+              </span>
+            ))}
           </div>
-
-          {/* Meta */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: TEXT_MUTED, flexWrap: "wrap" }}>
-            {author && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <AuthorAvatar author={author} size={20} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#1A1A1A" }}>{author.username}</span>
-              </div>
-            )}
-            <span>{fmtDate(blog.createdAt)}</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <Heart size={12} />
-              {fmtNum(blog.likeCount)}
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <MessageSquare size={12} />
-              {fmtNum(blog.commentCount)}
-            </span>
-            <span className="ink-tip" data-tip={`${blog.views} views`} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <Eye size={12} />
-              {fmtNum(blog.views)}
-            </span>
-          </div>
+        )}
+        <h2 className="text-lg font-bold tracking-[-0.01em] leading-snug mb-2 group-hover:underline decoration-zinc-300 dark:decoration-zinc-600 underline-offset-4 line-clamp-2">
+          {blog.title}
+        </h2>
+        <p className="text-sm text-zinc-500 leading-relaxed mb-3 line-clamp-2">{blog.description}</p>
+        <div className="flex items-center gap-2 text-xs text-zinc-400">
+          {author && (
+            <>
+              <span className="w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[9px] font-semibold text-zinc-600 dark:text-zinc-300 overflow-hidden shrink-0">
+                {author.profileImage?.url ? (
+                  <img src={author.profileImage.url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  initials(author.username)
+                )}
+              </span>
+              <span className="text-zinc-600 dark:text-zinc-300 font-medium">{author.username}</span>
+            </>
+          )}
+          <span>· {fmtDate(blog.createdAt)}</span>
+          <span className="ml-auto">♡ {fmtNum(blog.likeCount)} · {fmtNum(blog.commentCount)}</span>
         </div>
       </div>
-    </div>
-  );
-}
-
-function AuthorAvatar({ author, size }: { author: { username: string; profileImage?: { url: string } }; size: number }) {
-  if (author.profileImage?.url) {
-    return <img src={author.profileImage.url} alt={author.username} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
-  }
-  return (
-    <div style={{ width: size, height: size, borderRadius: "50%", background: `linear-gradient(135deg,${ACCENT2},#5A3820)`, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: size * 0.38, flexShrink: 0 }}>
-      {initials(author.username)}
-    </div>
+    </a>
   );
 }
 
 /* ── Skeleton loaders ── */
 function ArticleSkeletons() {
   return (
-    <>
+    <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 0, borderBottom: `1px solid ${BORDER}`, borderTop: i === 0 ? `1px solid ${BORDER}` : undefined, padding: "24px 0" }}>
-          <div style={{ aspectRatio: "4/3", borderRadius: 12, background: "#F0F0F0", animation: "pulse 1.5s ease-in-out infinite" }} />
-          <div style={{ padding: "0 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ height: 12, width: 60, borderRadius: 6, background: "#F0F0F0", animation: "pulse 1.5s ease-in-out infinite" }} />
-            <div style={{ height: 16, width: "80%", borderRadius: 6, background: "#F0F0F0", animation: "pulse 1.5s ease-in-out infinite" }} />
-            <div style={{ height: 16, width: "60%", borderRadius: 6, background: "#F0F0F0", animation: "pulse 1.5s ease-in-out infinite" }} />
-            <div style={{ height: 12, width: "90%", borderRadius: 6, background: "#F0F0F0", animation: "pulse 1.5s ease-in-out infinite" }} />
-            <div style={{ height: 12, width: "70%", borderRadius: 6, background: "#F0F0F0", animation: "pulse 1.5s ease-in-out infinite" }} />
+        <div key={i} className="grid sm:grid-cols-[200px_1fr] gap-6 py-7 first:pt-0">
+          <div className="aspect-video sm:aspect-[4/3] rounded-md bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+          <div className="animate-pulse space-y-3">
+            <div className="h-3 w-16 rounded bg-zinc-100 dark:bg-zinc-800" />
+            <div className="h-4 w-3/4 rounded bg-zinc-100 dark:bg-zinc-800" />
+            <div className="h-3 w-full rounded bg-zinc-100 dark:bg-zinc-800" />
+            <div className="h-3 w-2/3 rounded bg-zinc-100 dark:bg-zinc-800" />
           </div>
-          <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
         </div>
       ))}
-    </>
+    </div>
   );
 }
 
 /* ── Empty state ── */
 function EmptyState({ query, tag, onClear }: { query: string; tag: string | null; onClear: () => void }) {
   return (
-    <div style={{ textAlign: "center", padding: "80px 24px", borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-      <h3 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 8, color: "#1A1A1A" }}>No articles found</h3>
-      <p style={{ fontSize: 14, color: TEXT_MUTED, marginBottom: 24 }}>
-        {query ? `No results for "${query}"${tag ? ` in ${tag}` : ""}` : tag ? `No articles tagged "${tag}"` : "No articles published yet."}
+    <div className="text-center py-20 border-t border-zinc-200 dark:border-zinc-800">
+      <h3 className="text-xl font-bold tracking-[-0.02em] mb-2">No articles found</h3>
+      <p className="text-sm text-zinc-500 mb-6">
+        {query
+          ? `No results for "${query}"${tag ? ` in ${tag}` : ""}`
+          : tag
+          ? `No articles tagged "${tag}"`
+          : "No articles published yet."}
       </p>
       <button
         onClick={onClear}
-        style={{ padding: "8px 20px", borderRadius: 8, background: ACCENT, color: "white", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+        className="h-9 px-4 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium hover:bg-zinc-700 dark:hover:bg-white transition-colors"
       >
         Clear filters
       </button>
@@ -441,18 +365,6 @@ function EmptyState({ query, tag, onClear }: { query: string; tag: string | null
 }
 
 /* ── Helpers ── */
-function pageBtnStyle(active: boolean, disabled: boolean): React.CSSProperties {
-  return {
-    width: 36, height: 36, borderRadius: 8,
-    border: `1.5px solid ${active ? ACCENT : BORDER}`,
-    background: active ? ACCENT : "#fff",
-    color: active ? "white" : disabled ? "#CCC" : TEXT_MUTED,
-    fontSize: 13, fontWeight: 600, cursor: disabled ? "not-allowed" : "pointer",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    opacity: disabled ? 0.4 : 1,
-  };
-}
-
 function buildPageNumbers(current: number, total: number): (number | "…")[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const pages: (number | "…")[] = [1];

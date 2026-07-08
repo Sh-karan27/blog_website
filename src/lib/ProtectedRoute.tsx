@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/lib/axios";
 import LoadingScreen from "@/utils/LoadingScreen";
 
 interface ProtectedRouteProps {
@@ -13,14 +14,35 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [authorized, setAuthorized] = useState<boolean | null>(null); // null = loading
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken");
+    const restoreSession = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (accessToken) {
+        setAuthorized(true);
+        return;
+      }
 
-    if (!accessToken) {
-      router.push("/login");
-      setAuthorized(false); // optional, not really used
-    } else {
-      setAuthorized(true);
-    }
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        router.push("/login");
+        setAuthorized(false);
+        return;
+      }
+
+      try {
+        const res = await axiosInstance.post("/users/refresh-token", { refreshToken });
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = res.data.data;
+        localStorage.setItem("accessToken", newAccessToken);
+        localStorage.setItem("refreshToken", newRefreshToken);
+        setAuthorized(true);
+      } catch {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        router.push("/login");
+        setAuthorized(false);
+      }
+    };
+
+    restoreSession();
   }, [router]);
 
   // While checking token

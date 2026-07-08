@@ -1,13 +1,17 @@
 "use client";
 import axiosInstance from "@/lib/axios";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import InkwellLogo from "./InkwellLogo";
+import ThemeToggle from "./ThemeToggle";
 
-const InkDrop = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2C12 2 4 10.5 4 15a8 8 0 0016 0C20 10.5 12 2 12 2z" />
-  </svg>
-);
+const NAV_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "Articles", href: "/articles" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+];
 
 const Navbar = () => {
   const router = useRouter();
@@ -60,99 +64,93 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 bg-[#985F2E] shadow-md">
-        <div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 h-14 sm:h-16 max-w-screen-2xl mx-auto">
+      <header className="sticky top-0 z-50 border-b border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 h-16 flex items-center gap-10">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 font-extrabold tracking-tight text-[17px] shrink-0">
+            <InkwellLogo width={17} height={22} />
+            Inkwell
+          </Link>
 
-          {/* Left: Logo + Nav */}
-          <div className="flex items-center gap-4 lg:gap-8 min-w-0">
-            <div
-              className="flex items-center gap-2 cursor-pointer flex-shrink-0"
-              onClick={() => router.push("/")}
-            >
-              <InkDrop className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              <span className="text-lg sm:text-xl font-black tracking-tighter text-white">Inkwell</span>
-            </div>
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-0.5 text-[13.5px]">
+            {NAV_LINKS.map((item) => {
+              const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={
+                    isActive
+                      ? "px-3.5 py-2 rounded-full font-semibold bg-zinc-100 dark:bg-zinc-900"
+                      : "px-3.5 py-2 rounded-full font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                  }
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-            {/* Desktop nav links */}
-            <nav id="inkwell-desktop-nav" style={{ display: "none", alignItems: "center", gap: 12 }}>
-              {[
-                { label: "Home", href: "/" },
-                { label: "Articles", href: "/articles" },
-                { label: "About", href: "/about" },
-                { label: "Contact", href: "/contact" },
-              ].map((item) => {
-                const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-                return (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    style={{
-                      color: isActive ? "#fff" : "rgba(255,255,255,0.8)",
-                      fontSize: 13, fontWeight: isActive ? 700 : 500,
-                      textDecoration: "none", whiteSpace: "nowrap",
-                      padding: "4px 12px", borderRadius: 6,
-                      background: isActive ? "rgba(255,255,255,0.18)" : "transparent",
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; } }}
-                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.background = "transparent"; } }}
-                  >
-                    {item.label}
-                  </a>
-                );
-              })}
-            </nav>
-            <style>{`
-              @media (min-width: 768px) {
-                #inkwell-desktop-nav { display: flex !important; }
-              }
-            `}</style>
-          </div>
-
-          {/* Right: Write + Avatar + Hamburger */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            {/* Write — hidden on mobile */}
+          {/* Right cluster */}
+          <div className="ml-auto flex items-center gap-2.5">
+            {/* Search shortcut → articles */}
             <button
-              onClick={() => router.push("/write")}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-white text-[#985F2E] text-xs sm:text-sm font-bold rounded-lg hover:bg-[#F5F0EB] transition-colors whitespace-nowrap"
+              onClick={() => router.push("/articles")}
+              className="hidden lg:flex items-center gap-2.5 h-9 px-3.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-400 text-[13px] w-60 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-text"
             >
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
               </svg>
-              Write
+              Search stories…
+              <kbd className="ml-auto text-[10px] font-medium border border-zinc-200 dark:border-zinc-800 rounded-md px-1.5 py-0.5">⌘K</kbd>
             </button>
+
+            <ThemeToggle />
+
+            <Link
+              href="/write"
+              className="hidden md:inline-flex h-9 px-4 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13.5px] font-semibold items-center hover:bg-zinc-700 dark:hover:bg-white transition-colors shadow-sm"
+            >
+              Write
+            </Link>
 
             {/* Avatar dropdown — desktop */}
             <div className="hidden md:block relative" ref={dropdownRef}>
               <button
-                className="p-0 bg-transparent border-none cursor-pointer rounded-full"
+                className="w-9 h-9 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 ring-2 ring-white dark:ring-zinc-950 cursor-pointer"
                 onClick={() => setDropdownOpen((prev) => !prev)}
+                aria-label="Account menu"
               >
-                <img
-                  alt="User avatar"
-                  src={profileImage || "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"}
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover ring-2 ring-white/60 hover:ring-white transition-all"
-                />
+                {profileImage ? (
+                  <img alt="User avatar" src={profileImage} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="w-full h-full flex items-center justify-center text-xs font-bold text-zinc-600 dark:text-zinc-300">
+                    IN
+                  </span>
+                )}
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl z-50 py-1 border border-[#E5E5E5] overflow-hidden">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 rounded-lg shadow-lg z-50 py-1 border border-zinc-200 dark:border-zinc-800 overflow-hidden">
                   <button
                     onClick={() => { router.push(profileHref); setDropdownOpen(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-[#F5F5F5] transition-colors"
+                    className="w-full text-left px-4 py-2.5 text-sm text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                   >
                     Profile
                   </button>
                   <button
                     onClick={() => { router.push("/settings"); setDropdownOpen(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-[#F5F5F5] transition-colors"
+                    className="w-full text-left px-4 py-2.5 text-sm text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                   >
                     Settings
                   </button>
-                  <div className="border-t border-[#E5E5E5] my-1" />
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 my-1" />
                   <button
                     onClick={logoutUser}
-                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-600/90 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
                   >
                     Logout
                   </button>
@@ -160,15 +158,15 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Hamburger — mobile + tablet */}
+            {/* Hamburger — mobile */}
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-[5px] rounded-md hover:bg-white/10 transition-colors"
+              className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-[5px] rounded-full border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
             >
-              <span className="block w-5 h-[2px] bg-white rounded" />
-              <span className="block w-5 h-[2px] bg-white rounded" />
-              <span className="block w-5 h-[2px] bg-white rounded" />
+              <span className="block w-4 h-[1.5px] bg-zinc-900 dark:bg-zinc-100 rounded" />
+              <span className="block w-4 h-[1.5px] bg-zinc-900 dark:bg-zinc-100 rounded" />
+              <span className="block w-4 h-[1.5px] bg-zinc-900 dark:bg-zinc-100 rounded" />
             </button>
           </div>
         </div>
@@ -176,25 +174,26 @@ const Navbar = () => {
 
       {/* Mobile / tablet fullscreen menu */}
       <div
-        className={`md:hidden fixed inset-0 z-[100] bg-[#1A0E04] flex flex-col transition-all duration-300 ease-in-out ${
+        className={`md:hidden fixed inset-0 z-[100] bg-white dark:bg-zinc-950 flex flex-col transition-all duration-300 ease-in-out ${
           menuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
         }`}
       >
         {/* Top bar */}
-        <div className="flex justify-between items-center px-5 sm:px-8 py-4 border-b border-white/10">
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => { router.push("/"); setMenuOpen(false); }}
+        <div className="flex justify-between items-center px-5 sm:px-8 h-16 border-b border-zinc-200 dark:border-zinc-800">
+          <Link
+            href="/"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center gap-2.5 font-extrabold tracking-tight text-[17px]"
           >
-            <InkDrop className="w-6 h-6 text-[#985F2E]" />
-            <span className="text-xl font-black tracking-tighter text-white">Inkwell</span>
-          </div>
+            <InkwellLogo width={17} height={22} />
+            Inkwell
+          </Link>
           <button
             onClick={() => setMenuOpen(false)}
             aria-label="Close menu"
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -216,7 +215,7 @@ const Navbar = () => {
               key={item.label}
               href={item.href}
               onClick={() => setMenuOpen(false)}
-              className="text-white text-3xl sm:text-4xl font-bold tracking-tight py-4 sm:py-5 border-b border-white/10 hover:pl-3 hover:text-white/60 transition-all duration-200"
+              className="text-3xl sm:text-4xl font-bold tracking-[-0.02em] py-4 sm:py-5 border-b border-zinc-100 dark:border-zinc-900 hover:pl-3 hover:text-zinc-400 dark:hover:text-zinc-500 transition-all duration-200"
               style={{ transitionDelay: menuOpen ? `${i * 60}ms` : "0ms" }}
             >
               {item.label}
@@ -225,10 +224,10 @@ const Navbar = () => {
         </nav>
 
         {/* Bottom: logout */}
-        <div className="px-5 sm:px-8 py-6 border-t border-white/10">
+        <div className="px-5 sm:px-8 py-6 border-t border-zinc-200 dark:border-zinc-800">
           <button
             onClick={logoutUser}
-            className="text-red-400 text-sm font-medium hover:text-red-300 transition-colors py-2"
+            className="text-red-600/90 dark:text-red-400 text-sm font-medium hover:text-red-600 transition-colors py-2"
           >
             Logout
           </button>

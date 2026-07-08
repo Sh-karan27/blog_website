@@ -2,120 +2,63 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-
-const T = {
-  accent:      "#985F2E",
-  accentHover: "#7A4A22",
-  surface:     "#FFFFFF",
-  text2:       "#1A1A1A",
-  muted:       "#666666",
-  border:      "#E5E5E5",
-};
-
-function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
-  const [hovered, setHovered] = useState(false);
-  const isExternal = href === "#";
-  const style: React.CSSProperties = { fontSize: 14, color: hovered ? T.accent : T.text2, textDecoration: "none", transition: "color 0.15s" };
-  return isExternal ? (
-    <a href={href} style={style} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>{children}</a>
-  ) : (
-    <Link href={href} style={style} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>{children}</Link>
-  );
-}
+import InkwellLogo from "./InkwellLogo";
 
 export default function Footer() {
   return (
-    <footer style={{ background: T.surface, borderTop: `1px solid ${T.border}`, paddingTop: 48, paddingBottom: 28 }}>
-      <style>{`
-        .iw-footer-grid {
-          display: grid;
-          grid-template-columns: 2fr 1fr 1fr 1fr;
-          gap: 48px;
-          margin-bottom: 48px;
-        }
-        .iw-newsletter {
-          display: flex;
-          gap: 8px;
-          margin-top: 14px;
-        }
-        .iw-footer-bottom {
-          padding-top: 24px;
-          border-top: 1px solid ${T.border};
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          font-size: 13px;
-          color: ${T.muted};
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        @media (max-width: 1023px) {
-          .iw-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
-        }
-        @media (max-width: 599px) {
-          .iw-footer-grid { grid-template-columns: 1fr; gap: 28px; }
-          .iw-newsletter { flex-direction: column; }
-          .iw-footer-bottom { flex-direction: column; align-items: flex-start; gap: 4px; }
-        }
-      `}</style>
-
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 20px" }}>
-
-        <div className="iw-footer-grid">
-
-          {/* Brand + newsletter */}
+    <footer className="border-t border-zinc-200 dark:border-zinc-800">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-10">
+        <div className="grid md:grid-cols-[1.4fr_1fr_1fr_1.4fr] gap-12 pb-14">
+          {/* Brand */}
           <div>
-            <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: T.accent }}>
-              <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-                <path d="M14 2C14 2 23 11 23 17.5C23 22.1 19 25.5 14 25.5C9 25.5 5 22.1 5 17.5C5 11 14 2 14 2Z" fill="#985F2E" />
-                <path d="M14 12C14 12 17.5 15.5 17.5 18C17.5 19.9 15.9 21 14 21C12.1 21 10.5 19.9 10.5 18C10.5 15.5 14 12 14 12Z" fill="#985F2E" fillOpacity="0.32" />
-              </svg>
+            <Link href="/" className="flex items-center gap-2.5 font-extrabold tracking-tight text-[17px] mb-4">
+              <InkwellLogo width={15} height={19} />
               Inkwell
             </Link>
-            <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.7, marginTop: 10, maxWidth: 260 }}>
-              Write. Connect. Be Read. A modern platform for writers who mean business and readers who seek depth.
+            <p className="text-sm text-zinc-500 leading-relaxed max-w-[220px]">
+              Write. Connect. Be&nbsp;Read.
+              <br />
+              Long-form writing for people who build things.
             </p>
-            <NewsletterForm />
           </div>
 
           {/* Platform */}
           <div>
-            <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: T.muted, marginBottom: 14 }}>Platform</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <FooterLink href="/">Home</FooterLink>
-              <FooterLink href="/write">Write a Story</FooterLink>
-              <FooterLink href="#">Explore Authors</FooterLink>
-              <FooterLink href="#">Topics</FooterLink>
-            </div>
+            <p className="text-[11px] font-bold tracking-[0.22em] uppercase text-zinc-400 mb-5">Platform</p>
+            <ul className="space-y-3 text-sm font-medium text-zinc-500">
+              <li>
+                <Link href="/articles" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Articles</Link>
+              </li>
+              <li>
+                <Link href="/write" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Write</Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">About</Link>
+              </li>
+            </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: T.muted, marginBottom: 14 }}>Legal</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <FooterLink href="#">Privacy Policy</FooterLink>
-              <FooterLink href="#">Terms of Service</FooterLink>
-              <FooterLink href="#">Cookie Policy</FooterLink>
-              <FooterLink href="#">DMCA</FooterLink>
-            </div>
+            <p className="text-[11px] font-bold tracking-[0.22em] uppercase text-zinc-400 mb-5">Legal</p>
+            <ul className="space-y-3 text-sm font-medium text-zinc-500">
+              <li><a href="#" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Terms</a></li>
+              <li><a href="#" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Privacy</a></li>
+              <li><a href="#" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Content policy</a></li>
+            </ul>
           </div>
 
-          {/* Social */}
+          {/* Newsletter */}
           <div>
-            <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: T.muted, marginBottom: 14 }}>Social</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <FooterLink href="#">Twitter / X</FooterLink>
-              <FooterLink href="#">GitHub</FooterLink>
-              <FooterLink href="#">LinkedIn</FooterLink>
-              <FooterLink href="#">Discord</FooterLink>
-              <FooterLink href="#">RSS Feed</FooterLink>
-            </div>
+            <p className="text-[11px] font-bold tracking-[0.22em] uppercase text-zinc-400 mb-5">Newsletter</p>
+            <p className="text-sm text-zinc-500 mb-4">One essay digest per week. No noise.</p>
+            <NewsletterForm />
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="iw-footer-bottom">
-          <span>© 2026 Inkwell. All rights reserved.</span>
+        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-7 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400 font-medium">
+          <span>© 2026 Inkwell</span>
           <span>Made with care for writers everywhere.</span>
         </div>
       </div>
@@ -125,31 +68,19 @@ export default function Footer() {
 
 function NewsletterForm() {
   const [email, setEmail] = useState("");
-  const [focused, setFocused] = useState(false);
 
   return (
-    <div className="iw-newsletter">
+    <div className="flex gap-2">
       <input
         type="email"
         value={email}
-        onChange={e => setEmail(e.target.value)}
-        placeholder="Your email"
-        aria-label="Newsletter email"
-        style={{
-          flex: 1, padding: "8px 12px", border: `1.5px solid ${focused ? T.accent : T.border}`,
-          borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none",
-          background: T.surface, color: "#000000", transition: "border-color 0.15s",
-          boxShadow: focused ? "0 0 0 3px rgba(152,95,46,0.12)" : "none",
-        }}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@example.com"
+        aria-label="Email for newsletter"
+        className="flex-1 h-10 px-4 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:border-transparent min-w-0"
       />
-      <button
-        style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "8px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600, background: T.accent, color: "white", border: "none", cursor: "pointer", transition: "background 0.15s", whiteSpace: "nowrap" }}
-        onMouseEnter={e => (e.currentTarget.style.background = T.accentHover)}
-        onMouseLeave={e => (e.currentTarget.style.background = T.accent)}
-      >
-        Subscribe
+      <button className="h-10 px-4 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-white transition-colors shrink-0">
+        Join
       </button>
     </div>
   );

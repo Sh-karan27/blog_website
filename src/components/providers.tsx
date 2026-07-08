@@ -9,14 +9,14 @@ import ProtectedRoute from "@/lib/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import Footer from "./Footer";
 
+const AUTH_PATHS = ["/login", "/register"];
+const PROTECTED_PREFIXES = ["/write", "/settings", "/blog/edit"];
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Public pages that don't need authentication
-  const publicPaths = ["/login", "/register"];
-  const isProtected = !publicPaths.includes(pathname);
-
-  const hideNavbar = publicPaths.includes(pathname);
+  const hideNavbar = AUTH_PATHS.includes(pathname);
+  const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   return (
     <Provider store={store}>
@@ -32,7 +32,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         theme="colored"
       />
       {!hideNavbar && <Navbar />}
-      <div className={!hideNavbar ? "pt-16" : ""}>
+      <div>
         {isProtected ? <ProtectedRoute>{children}</ProtectedRoute> : children}
       </div>
       {!hideNavbar && <Footer />}
