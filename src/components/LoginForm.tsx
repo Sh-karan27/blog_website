@@ -166,22 +166,6 @@ export default function LoginComponent() {
             </button>
           </form>
 
-          <div className="flex items-center gap-4 my-7">
-            <span className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
-            <span className="text-xs text-zinc-400">or continue with</span>
-            <span className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
-          </div>
-
-          <button
-            type="button"
-            className="w-full h-11 rounded-full border border-zinc-300 dark:border-zinc-700 text-sm font-medium flex items-center justify-center gap-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81Z" />
-            </svg>
-            Google
-          </button>
-
           <p className="text-sm text-zinc-500 text-center mt-8">
             Don&apos;t have an account?{" "}
             <Link

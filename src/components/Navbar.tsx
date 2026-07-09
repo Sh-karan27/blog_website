@@ -95,19 +95,6 @@ const Navbar = () => {
 
           {/* Right cluster */}
           <div className="ml-auto flex items-center gap-2.5">
-            {/* Search shortcut → articles */}
-            <button
-              onClick={() => router.push("/articles")}
-              className="hidden lg:flex items-center gap-2.5 h-9 px-3.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-400 text-[13px] w-60 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-text"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-              Search stories…
-              <kbd className="ml-auto text-[10px] font-medium border border-zinc-200 dark:border-zinc-800 rounded-md px-1.5 py-0.5">⌘K</kbd>
-            </button>
-
             <ThemeToggle />
 
             <Link

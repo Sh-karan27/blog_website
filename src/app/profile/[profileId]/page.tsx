@@ -2,10 +2,11 @@
 
 import axiosInstance from "@/lib/axios";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
+import LoadingScreen from "@/components/LoadingScreen";
 
 interface Blog {
   _id: string;
@@ -13,7 +14,6 @@ interface Blog {
   description: string;
   content: string;
   coverImage: { url: string };
-  author: { username: string; profileImage: { url: string } };
   createdAt: string;
   likeCount: number;
   views: number;
@@ -36,78 +36,118 @@ interface UserChannel {
   createdAt: string;
 }
 
-const formatDate = (d: string) =>
+const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-const CuratorProfile = () => {
+const fmtN = (n: number) => {
+  const v = n ?? 0;
+  return v > 999 ? (v / 1000).toFixed(1).replace(/\.0$/, "") + "k" : String(v);
+};
+
+const readTime = (post: Pick<Blog, "content">) =>
+  Math.max(1, Math.ceil((post.content || "").replace(/<[^>]+>/g, " ").trim().split(/\s+/).filter(Boolean).length / 200));
+
+const GRID_PAGE_SIZE = 6;
+
+export default function ProfilePage() {
   const { profileId } = useParams() as { profileId: string };
-  const router = useRouter();
 
   const [userChannel, setUserChannel] = useState<UserChannel | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [recentPosts, setRecentPosts] = useState<Blog[]>([]);
-  const [mostLiked, setMostLiked] = useState<Blog[]>([]);
-  const [mostViewed, setMostViewed] = useState<Blog[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  const [publishedPosts, setPublishedPosts] = useState<Blog[]>([]);
+  const [totalArticles, setTotalArticles] = useState(0);
+  const [totalReads, setTotalReads] = useState(0);
+  const [popularPosts, setPopularPosts] = useState<Blog[]>([]);
+
+  const [postsPage, setPostsPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const profileImageRef = useRef<HTMLInputElement>(null);
   const coverImageRef = useRef<HTMLInputElement>(null);
+
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"viewed" | "liked">("viewed");
+  const [activeTab, setActiveTab] = useState<"published" | "popular" | "about">("published");
 
   const isOwner = userChannel?.isOwner;
 
   useEffect(() => {
     if (!profileId) return;
 
-    const fetchAll = async () => {
+    (async () => {
       try {
-        setLoadingProfile(true);
-        setLoadingPosts(true);
+        setLoading(true);
+        setNotFound(false);
 
-        const [profileRes, recentRes, likedRes, viewedRes] = await Promise.all([
+        const [profileRes, publishedRes, popularRes, readsRes] = await Promise.all([
           axiosInstance.get(`/users/c/${profileId}`),
-          axiosInstance.get(`/blog/u/${profileId}`, { params: { page: 1, limit: 5, sortBy: "createdAt", sortType: "desc" } }),
-          axiosInstance.get(`/blog/u/${profileId}`, { params: { page: 1, limit: 4, sortBy: "likeCount", sortType: "desc" } }),
-          axiosInstance.get(`/blog/u/${profileId}`, { params: { page: 1, limit: 4, sortBy: "views", sortType: "desc" } }),
+          axiosInstance.get(`/blog/u/${profileId}`, { params: { page: 1, limit: GRID_PAGE_SIZE + 1, sortBy: "createdAt", sortType: "desc" } }),
+          axiosInstance.get(`/blog/u/${profileId}`, { params: { page: 1, limit: 5, sortBy: "views", sortType: "desc" } }),
+          axiosInstance.get(`/blog/u/${profileId}`, { params: { page: 1, limit: 200, sortBy: "views", sortType: "desc" } }),
         ]);
 
         const user = profileRes.data?.data?.[0];
-        if (user) {
-          const mappedUser: UserChannel = {
-            _id: user._id,
-            username: user.username,
-            email: user.email,
-            bio: user.bio,
-            profileImage: user.profileImage,
-            coverImage: user.coverImage,
-            followerCount: user.followerCount,
-            followingCount: user.followingToCount,
-            isFollowing: user.isFollowing,
-            isFollower: user.isFollower,
-            isOwner: user.isOwner,
-            createdAt: user.createdAt,
-          };
-          setUserChannel(mappedUser);
-          setIsFollowing(user.isFollowing ?? false);
+        if (!user) {
+          setNotFound(true);
+          return;
         }
 
-        const extract = (res: any): Blog[] => res.data?.data?.blogs ?? [];
-        setRecentPosts(extract(recentRes));
-        setMostLiked(extract(likedRes));
-        setMostViewed(extract(viewedRes));
+        setUserChannel({
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          bio: user.bio,
+          profileImage: user.profileImage,
+          coverImage: user.coverImage,
+          followerCount: user.followerCount ?? 0,
+          followingCount: user.followingToCount ?? 0,
+          isFollowing: user.isFollowing,
+          isFollower: user.isFollower,
+          isOwner: user.isOwner,
+          createdAt: user.createdAt,
+        });
+        setIsFollowing(user.isFollowing ?? false);
+
+        setPublishedPosts(publishedRes.data?.data?.blogs ?? []);
+        setTotalArticles(publishedRes.data?.data?.pagination?.totalCount ?? 0);
+        setHasMorePosts(publishedRes.data?.data?.pagination?.hasMore ?? false);
+        setPostsPage(1);
+
+        setPopularPosts(popularRes.data?.data?.blogs ?? []);
+
+        const readsBlogs: Blog[] = readsRes.data?.data?.blogs ?? [];
+        setTotalReads(readsBlogs.reduce((sum, b) => sum + (b.views ?? 0), 0));
       } catch (err) {
         console.error("Failed to fetch profile:", err);
+        setNotFound(true);
       } finally {
-        setLoadingProfile(false);
-        setLoadingPosts(false);
+        setLoading(false);
       }
-    };
-
-    fetchAll();
+    })();
   }, [profileId]);
+
+  const handleLoadMore = async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = postsPage + 1;
+      const res = await axiosInstance.get(`/blog/u/${profileId}`, {
+        params: { page: nextPage, limit: GRID_PAGE_SIZE, sortBy: "createdAt", sortType: "desc" },
+      });
+      setPublishedPosts((prev) => [...prev, ...(res.data?.data?.blogs ?? [])]);
+      setHasMorePosts(res.data?.data?.pagination?.hasMore ?? false);
+      setPostsPage(nextPage);
+    } catch {
+      toast.error("Failed to load more articles");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -164,344 +204,347 @@ const CuratorProfile = () => {
     }
   };
 
-  const displayImage = userChannel?.profileImage?.url;
-  const displayCover = userChannel?.coverImage?.url;
-  const displayUsername = userChannel?.username;
-  const displayEmail = userChannel?.email;
-  const displayBio = userChannel?.bio;
-  const displayCreatedAt = userChannel?.createdAt;
+  if (loading) return <LoadingScreen status="Loading profile…" />;
+
+  if (notFound || !userChannel) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-zinc-400 text-sm">
+        Profile not found
+      </div>
+    );
+  }
+
+  const featured = publishedPosts[0];
+  const gridPosts = publishedPosts.slice(1);
+  const writtenAboutTags = Array.from(
+    new Set([...publishedPosts, ...popularPosts].flatMap((p) => p.tag ?? [])),
+  ).slice(0, 8);
 
   return (
-    <div className="bg-[#FAFAFA] min-h-screen font-sans text-[#171c20]">
-      <main className="pt-0 pb-24">
+    <div>
+      {/* ══ COVER ══ */}
+      <div className="group relative cover-ph h-52 sm:h-64">
+        {userChannel.coverImage?.url && (
+          <img src={userChannel.coverImage.url} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+        )}
+        {isOwner && (
+          <>
+            <button
+              onClick={() => coverImageRef.current?.click()}
+              disabled={uploadingCover}
+              className="absolute bottom-4 right-4 z-10 h-9 px-3.5 rounded-full bg-zinc-950/70 dark:bg-white/15 text-white text-[13px] font-medium inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur"
+            >
+              {uploadingCover ? (
+                <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Camera className="w-3.5 h-3.5" />
+              )}
+              {uploadingCover ? "Uploading…" : "Change cover"}
+            </button>
+            <input ref={coverImageRef} type="file" accept="image/*" className="hidden" onChange={handleCoverImageChange} />
+          </>
+        )}
+      </div>
 
-        {/* ── Cover Banner ── */}
-        <div
-          className="relative w-full h-[240px] group cursor-pointer overflow-hidden"
-          style={!displayCover ? { background: "linear-gradient(135deg, #995F2F 0%, #7A4A22 50%, #7A4A22 100%)" } : undefined}
-        >
-          {displayCover && (
-            <img src={displayCover} alt="Cover" className="w-full h-full object-cover" />
-          )}
-          {isOwner && (
-            <>
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
-              <button
-                onClick={() => coverImageRef.current?.click()}
-                disabled={uploadingCover}
-                className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3.5 py-1.5 bg-black/55 hover:bg-black/80 text-white text-[12px] font-semibold rounded-full border border-white/20 transition-all opacity-0 group-hover:opacity-100 z-[3] backdrop-blur-sm"
-              >
-                {uploadingCover ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Camera className="w-3.5 h-3.5" />
-                )}
-                {uploadingCover ? "Uploading..." : "Change Cover"}
-              </button>
-              <input ref={coverImageRef} type="file" accept="image/*" className="hidden" onChange={handleCoverImageChange} />
-            </>
-          )}
-        </div>
-
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-8">
-
-          {/* ── Profile Row ── */}
-          <div className="relative pb-7 border-b border-[#E5E5E5] mb-8">
-            {/* Avatar */}
-            <div className="absolute top-[-36px] left-0 w-[88px] h-[88px]">
-              <div className="w-[88px] h-[88px] rounded-full border-4 border-white shadow-lg bg-[#985F2E] flex items-center justify-center text-[28px] font-black text-white overflow-hidden">
-                {displayImage ? (
-                  <img src={displayImage} alt={displayUsername ?? ""} className="w-full h-full object-cover" />
-                ) : (
-                  <span>{displayUsername?.[0]?.toUpperCase() ?? "?"}</span>
-                )}
-              </div>
+      <div className="max-w-5xl mx-auto px-6 lg:px-10">
+        {/* ══ IDENTITY ══ */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 -mt-14 mb-8">
+          <div className="flex items-end gap-5">
+            <div className="group relative w-28 h-28 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-950 flex items-center justify-center text-3xl font-black text-zinc-500 dark:text-zinc-300 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.35)] shrink-0 overflow-hidden">
+              {userChannel.profileImage?.url ? (
+                <img src={userChannel.profileImage.url} alt={userChannel.username} className="w-full h-full object-cover" />
+              ) : (
+                userChannel.username?.[0]?.toUpperCase() ?? "?"
+              )}
               {isOwner && (
                 <>
                   <button
                     onClick={() => profileImageRef.current?.click()}
                     disabled={uploadingProfile}
-                    className="absolute bottom-0.5 right-0.5 w-[26px] h-[26px] rounded-full bg-[#985F2E] border-2 border-white flex items-center justify-center z-10"
-                    title="Change photo"
+                    className="absolute inset-0 rounded-full bg-zinc-950/55 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    aria-label="Change avatar"
                   >
                     {uploadingProfile ? (
-                      <div className="w-[9px] h-[9px] border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                     ) : (
-                      <Camera className="w-[11px] h-[11px] text-white" />
+                      <Camera className="w-[18px] h-[18px]" />
                     )}
                   </button>
                   <input ref={profileImageRef} type="file" accept="image/*" className="hidden" onChange={handleProfileImageChange} />
                 </>
               )}
             </div>
-
-            {/* Info row */}
-            <div className="pt-[60px] flex items-start justify-between flex-wrap gap-4">
-              <div>
-                {loadingProfile ? (
-                  <div className="space-y-3 animate-pulse">
-                    <div className="h-8 bg-[#E5E5E5] rounded w-40" />
-                    <div className="h-4 bg-[#E5E5E5] rounded w-52" />
-                    <div className="h-4 bg-[#E5E5E5] rounded w-72" />
-                  </div>
-                ) : (
-                  <>
-                    <h1 className="text-[32px] font-black tracking-[-0.025em] mb-1.5 text-[#171c20] leading-tight">
-                      {displayUsername ?? "..."}
-                    </h1>
-                    <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-                      {displayCreatedAt && (
-                        <span className="px-2.5 py-[3px] rounded-full text-[11px] font-bold tracking-[0.04em] uppercase bg-[#F5F0EB] text-[#6e7881] border border-[#E5E5E5]">
-                          Since {new Date(displayCreatedAt).getFullYear()}
-                        </span>
-                      )}
-                      <span className="px-2.5 py-[3px] rounded-full text-[11px] font-bold tracking-[0.04em] uppercase bg-[#F5F0EB] text-[#985F2E] border border-[rgba(153,95,47,0.2)]">
-                        ✦ Writer
-                      </span>
-                    </div>
-                    {displayBio && (
-                      <p className="text-[15px] text-[#6e7881] leading-[1.65] max-w-[520px]">{displayBio}</p>
-                    )}
-                    {displayEmail && (
-                      <p className="mt-2.5 text-[13px] text-[#6e7881]">{displayEmail}</p>
-                    )}
-                  </>
-                )}
-              </div>
-
-              <div className="flex gap-2 items-center">
-                {isOwner ? (
-                  <>
-                    <Link
-                      href="/settings"
-                      className="px-4 py-1.5 text-xs font-bold rounded-lg border border-[#E5E5E5] text-[#3e4850] hover:border-[#985F2E] hover:text-[#985F2E] transition-all"
-                    >
-                      Edit Profile
-                    </Link>
-                    <Link
-                      href="/write"
-                      className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg bg-[#985F2E] text-white hover:bg-[#7A4A22] transition-all"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                      Write
-                    </Link>
-                  </>
-                ) : (
-                  <button
-                    onClick={handleFollowToggle}
-                    disabled={followLoading}
-                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 shadow-sm border ${
-                      isFollowing
-                        ? "bg-[#1A0E04] text-white border-transparent hover:bg-black"
-                        : "bg-[#985F2E] text-white border-transparent hover:bg-[#7A4A22]"
-                    } ${followLoading ? "opacity-70 cursor-not-allowed" : ""}`}
-                  >
-                    {followLoading ? "Please wait..." : isFollowing ? "Following" : userChannel?.isFollower ? "Follow Back" : "Follow"}
-                  </button>
-                )}
-              </div>
+            <div className="pb-1">
+              <h1 className="text-3xl font-black tracking-[-0.03em] mb-1.5">{userChannel.username}</h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                @{userChannel.username}
+                {userChannel.createdAt && ` · Joined ${new Date(userChannel.createdAt).getFullYear()}`}
+              </p>
             </div>
           </div>
+          <div className="flex gap-2.5 pb-1">
+            {isOwner ? (
+              <>
+                <Link
+                  href="/settings"
+                  className="h-10 px-4 rounded-full border border-zinc-300 dark:border-zinc-700 text-sm font-semibold inline-flex items-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                  </svg>
+                  Edit profile
+                </Link>
+                <Link
+                  href="/write"
+                  className="h-10 px-5 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold inline-flex items-center gap-2 hover:bg-zinc-700 dark:hover:bg-white transition-colors shadow-sm"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  Write
+                </Link>
+              </>
+            ) : (
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className={`h-10 px-5 rounded-full text-sm font-semibold inline-flex items-center gap-2 transition-colors shadow-sm disabled:opacity-60 ${
+                  isFollowing
+                    ? "border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                    : "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-white"
+                }`}
+              >
+                {followLoading ? "Please wait…" : isFollowing ? "Following" : userChannel.isFollower ? "Follow back" : "Follow"}
+              </button>
+            )}
+          </div>
+        </div>
 
-          {/* ── Stats Bento ── */}
-          <div className="grid grid-cols-3 gap-[1px] bg-[#E5E5E5] border border-[#E5E5E5] rounded-xl overflow-hidden mb-12">
+        {/* ══ BIO ══ */}
+        {userChannel.bio && (
+          <p className="text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-2xl mb-6">{userChannel.bio}</p>
+        )}
+        {userChannel.email && (
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-zinc-500 mb-10">
+            <span className="inline-flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-10 5L2 7" />
+              </svg>
+              {userChannel.email}
+            </span>
+          </div>
+        )}
+
+        {/* ══ STATS BENTO ══ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-zinc-200 dark:bg-zinc-800 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 mb-16">
+          {[
+            { value: fmtN(userChannel.followerCount), label: "Followers" },
+            { value: fmtN(userChannel.followingCount), label: "Following" },
+            { value: fmtN(totalArticles), label: "Articles" },
+            { value: fmtN(totalReads), label: "Total reads" },
+          ].map((s) => (
+            <div key={s.label} className="bg-white dark:bg-zinc-950 p-5">
+              <p className="text-2xl font-black tracking-[-0.02em]">{s.value}</p>
+              <p className="text-[11px] text-zinc-400 uppercase tracking-[0.16em] mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ══ CONTENT TABS ══ */}
+        <div className="border-b border-zinc-200 dark:border-zinc-800 mb-10">
+          <div className="flex gap-7 text-sm -mb-px" role="tablist" aria-label="Profile content">
             {[
-              { value: userChannel?.followerCount ?? 0, label: "Followers" },
-              { value: userChannel?.followingCount ?? 0, label: "Following" },
-              { value: recentPosts.length > 0 ? `${recentPosts.length}+` : "0", label: "Articles" },
-            ].map((s) => (
-              <div key={s.label} className="bg-[#FAFAFA] text-center px-5 py-6">
-                <span className="block text-[32px] font-black tracking-[-0.03em] text-[#985F2E] leading-none mb-1">
-                  {s.value}
-                </span>
-                <span className="text-[12px] uppercase tracking-[0.08em] font-bold text-[#6e7881]">
-                  {s.label}
-                </span>
-              </div>
+              { key: "published" as const, label: "Published", count: totalArticles },
+              { key: "popular" as const, label: "Popular" },
+              { key: "about" as const, label: "About" },
+            ].map((t) => (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={activeTab === t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`pb-3.5 border-b-2 transition-colors ${
+                  activeTab === t.key
+                    ? "font-semibold border-zinc-900 dark:border-zinc-100"
+                    : "font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 border-transparent"
+                }`}
+              >
+                {t.label} {t.count !== undefined && <span className="text-zinc-400 font-normal">{t.count}</span>}
+              </button>
             ))}
           </div>
-
-          {/* ── About Strip ── */}
-          {displayBio && (
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-5 max-w-3xl py-8 border-b border-[#E5E5E5] mb-2">
-              <div className="w-1 self-stretch min-h-12 rounded-full bg-[#985F2E] flex-shrink-0" />
-              <p className="flex-1 text-xl italic leading-[1.5] text-[#3e4850] tracking-[-0.01em]">{displayBio}</p>
-              {displayCreatedAt && (
-                <div className="text-[11px] uppercase tracking-[0.16em] text-[#6e7881] whitespace-nowrap sm:self-end font-semibold">
-                  Member since {new Date(displayCreatedAt).getFullYear()}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Recent Publications ── */}
-          <section className="mt-16 mb-16">
-            <div className="flex items-baseline justify-between mb-6 gap-4">
-              <span className="text-[11px] font-black tracking-[0.3em] uppercase text-[#985F2E]">
-                Recent Publications
-              </span>
-              <button
-                onClick={() => router.push("/articles")}
-                className="text-[13px] font-semibold text-[#6e7881] hover:text-[#985F2E] transition-colors whitespace-nowrap"
-              >
-                View all →
-              </button>
-            </div>
-
-            {loadingPosts ? (
-              <div className="animate-pulse space-y-6">
-                <div className="aspect-[16/9] bg-[#E5E5E5] rounded-xl" />
-                {[1, 2, 3].map((i) => <div key={i} className="h-24 bg-[#E5E5E5] rounded-xl" />)}
-              </div>
-            ) : recentPosts.length === 0 ? (
-              <p className="text-center py-12 text-[15px] text-[#6e7881]">No publications yet.</p>
-            ) : (
-              <div className="flex flex-col">
-                {/* Featured first post */}
-                <Link href={`/blog/${recentPosts[0]._id}`} className="block bg-[#F5F0EB] rounded-xl overflow-hidden mb-7 group">
-                  <div className="aspect-[16/9] overflow-hidden">
-                    <img
-                      src={recentPosts[0].coverImage?.url}
-                      alt={recentPosts[0].title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  </div>
-                  <div className="p-6 sm:p-7 border-l-4 border-[#985F2E]">
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <span className="px-2 py-[3px] rounded-full text-[10px] font-black uppercase tracking-[0.15em] bg-[#985F2E]/10 text-[#985F2E]">
-                        {recentPosts[0].tag?.[0] ?? "Essay"}
-                      </span>
-                      <span className="text-[12px] text-[#6e7881]">{formatDate(recentPosts[0].createdAt)}</span>
-                    </div>
-                    <h3 className="text-[26px] font-black tracking-[-0.025em] leading-snug text-[#171c20] mb-3 group-hover:text-[#985F2E] transition-colors line-clamp-2">
-                      {recentPosts[0].title}
-                    </h3>
-                    <p className="text-[15px] text-[#6e7881] leading-relaxed mb-4 max-w-[620px] line-clamp-3">
-                      {recentPosts[0].description}
-                    </p>
-                    <div className="flex items-center gap-4 text-[12px] text-[#6e7881]">
-                      <span className="flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 flex-shrink-0">
-                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                        </svg>
-                        {recentPosts[0].likeCount ?? 0}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 flex-shrink-0">
-                          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-                        </svg>
-                        {recentPosts[0].commentCount ?? 0}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 flex-shrink-0">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                        {recentPosts[0].views ?? 0}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Standard list rows */}
-                {recentPosts.slice(1).map((post) => (
-                  <Link
-                    key={post._id}
-                    href={`/blog/${post._id}`}
-                    className="grid grid-cols-[110px_1fr] sm:grid-cols-[160px_1fr] gap-3.5 sm:gap-5 py-6 border-t border-[#E5E5E5] group"
-                  >
-                    <div className="h-[72px] sm:h-[100px] rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={post.coverImage?.url}
-                        alt={post.title}
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                      />
-                    </div>
-                    <div className="min-w-0 flex flex-col justify-center">
-                      <span className="inline-block px-2 py-[3px] rounded-full text-[10px] font-black uppercase tracking-[0.15em] bg-[#985F2E]/10 text-[#985F2E] mb-2 self-start">
-                        {post.tag?.[0] ?? "Essay"}
-                      </span>
-                      <h4 className="text-[18px] font-bold tracking-[-0.01em] leading-snug text-[#171c20] mb-1.5 group-hover:text-[#985F2E] transition-colors line-clamp-2">
-                        {post.title}
-                      </h4>
-                      <p className="text-[14px] text-[#3e4850] leading-[1.55] mb-3 line-clamp-2 hidden sm:block">
-                        {post.description}
-                      </p>
-                      <div className="flex items-center justify-between gap-3 text-[12px] text-[#6e7881]">
-                        <span>{post.likeCount ?? 0} likes · {post.commentCount ?? 0} comments · {post.views ?? 0} views</span>
-                        <span className="whitespace-nowrap hidden sm:block">{formatDate(post.createdAt)}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* ── Tabbed Ranking ── */}
-          <section className="mb-24">
-            <div className="inline-flex gap-1 p-1 bg-[#F5F0EB] rounded-full mb-7">
-              {(["viewed", "liked"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-2 rounded-full font-bold text-[13px] transition-all ${
-                    activeTab === tab
-                      ? "bg-[#985F2E] text-white"
-                      : "bg-transparent text-[#6e7881] hover:text-[#985F2E]"
-                  }`}
-                >
-                  {tab === "viewed" ? "Most Viewed" : "Most Liked"}
-                </button>
-              ))}
-            </div>
-
-            {loadingPosts ? (
-              <div className="space-y-4 animate-pulse">
-                {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 bg-[#E5E5E5] rounded-xl" />)}
-              </div>
-            ) : (
-              <div key={activeTab} className="flex flex-col animate-fadeIn">
-                {(activeTab === "viewed" ? mostViewed : mostLiked).map((item, i) => (
-                  <Link
-                    key={item._id}
-                    href={`/blog/${item._id}`}
-                    className={`grid grid-cols-[44px_72px_1fr] gap-4 py-4 group ${i > 0 ? "border-t border-[#E5E5E5]" : ""}`}
-                  >
-                    <div className="text-[36px] font-black leading-none text-[#E5E5E5] tracking-[-0.04em] text-center self-center">
-                      {i + 1}
-                    </div>
-                    <div className="w-[72px] h-[72px] rounded-lg overflow-hidden flex-shrink-0 self-center">
-                      <img
-                        src={item.coverImage?.url}
-                        alt={item.title}
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
-                      />
-                    </div>
-                    <div className="self-center min-w-0">
-                      <h4 className="text-[16px] font-bold tracking-[-0.01em] leading-snug text-[#171c20] mb-1.5 group-hover:text-[#985F2E] transition-colors line-clamp-2">
-                        {item.title}
-                      </h4>
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-[13px] font-bold text-[#985F2E]">
-                          {activeTab === "viewed" ? `${item.views ?? 0} views` : `${item.likeCount ?? 0} likes`}
-                        </span>
-                        <span className="text-[12px] text-[#6e7881]">{formatDate(item.createdAt)}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-
         </div>
-      </main>
+
+        {/* ══ PANEL: PUBLISHED ══ */}
+        {activeTab === "published" && (
+          <section className="pb-20">
+            {publishedPosts.length === 0 ? (
+              <p className="text-center py-16 text-sm text-zinc-400">No published articles yet.</p>
+            ) : (
+              <>
+                {featured && (
+                  <Link
+                    href={`/blog/${featured._id}`}
+                    className="group grid md:grid-cols-2 gap-7 items-center rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 hover:border-zinc-400 dark:hover:border-zinc-600 hover:shadow-[0_20px_48px_-24px_rgba(0,0,0,0.25)] transition-all mb-12"
+                  >
+                    <div className="card-media rounded-xl">
+                      <div className="img-ph aspect-[16/10]">
+                        {featured.coverImage?.url && (
+                          <img src={featured.coverImage.url} alt={featured.title} className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="px-3 md:px-2 py-2">
+                      <div className="flex items-center gap-2.5 mb-3">
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                          {featured.tag?.[0] ?? "Essay"}
+                        </span>
+                        <span className="text-xs text-zinc-400">{fmtDate(featured.createdAt)}</span>
+                      </div>
+                      <h3 className="text-2xl font-black tracking-[-0.02em] leading-tight mb-3 group-hover:text-zinc-500 dark:group-hover:text-zinc-400 transition-colors">
+                        {featured.title}
+                      </h3>
+                      <p className="text-sm text-zinc-500 leading-relaxed mb-5 line-clamp-2">{featured.description}</p>
+                      <div className="flex items-center gap-4 text-xs text-zinc-400 font-medium">
+                        <span>♡ {fmtN(featured.likeCount)}</span>
+                        <span>{fmtN(featured.commentCount)} comments</span>
+                        <span>{fmtN(featured.views)} views</span>
+                        <span className="ml-auto">{readTime(featured)} min read</span>
+                      </div>
+                    </div>
+                  </Link>
+                )}
+
+                {gridPosts.length > 0 && (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-7 gap-y-12">
+                    {gridPosts.map((post) => (
+                      <Link key={post._id} href={`/blog/${post._id}`} className="group block">
+                        <div className="card-media rounded-xl mb-4">
+                          <div className="img-ph aspect-[16/10]">
+                            {post.coverImage?.url && (
+                              <img src={post.coverImage.url} alt={post.title} className="w-full h-full object-cover" />
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-[11px] font-bold tracking-[0.16em] uppercase text-zinc-400 mb-2">{post.tag?.[0] ?? "Essay"}</p>
+                        <h3 className="text-[17px] font-bold tracking-[-0.01em] leading-snug mb-2 group-hover:text-zinc-500 dark:group-hover:text-zinc-400 transition-colors line-clamp-2">
+                          {post.title}
+                        </h3>
+                        <p className="text-sm text-zinc-500 leading-relaxed mb-3 line-clamp-2">{post.description}</p>
+                        <p className="text-xs text-zinc-400 font-medium">
+                          {fmtDate(post.createdAt)} · ♡ {fmtN(post.likeCount)} · {readTime(post)} min
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {hasMorePosts && (
+                  <div className="flex justify-center mt-14">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      className="h-10 px-6 rounded-full border border-zinc-300 dark:border-zinc-700 text-sm font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors disabled:opacity-60"
+                    >
+                      {loadingMore ? "Loading…" : "Load more"}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
+
+        {/* ══ PANEL: POPULAR ══ */}
+        {activeTab === "popular" && (
+          <section className="pb-20">
+            {popularPosts.length === 0 ? (
+              <p className="text-center py-16 text-sm text-zinc-400">No articles yet.</p>
+            ) : (
+              <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {popularPosts.map((post, i) => (
+                  <Link key={post._id} href={`/blog/${post._id}`} className="group flex items-center gap-5 py-5">
+                    <span className="text-4xl font-black text-zinc-200 dark:text-zinc-800 tabular-nums w-12 text-center shrink-0">
+                      {i + 1}
+                    </span>
+                    <div className="card-media rounded-lg w-24 h-16 shrink-0">
+                      <div className="img-ph w-24 h-16">
+                        {post.coverImage?.url && (
+                          <img src={post.coverImage.url} alt={post.title} className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base font-bold tracking-[-0.01em] leading-snug mb-1 group-hover:text-zinc-500 dark:group-hover:text-zinc-400 transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+                      <p className="text-xs text-zinc-400 font-medium">
+                        {fmtN(post.views)} views · ♡ {fmtN(post.likeCount)} · {fmtDate(post.createdAt)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ══ PANEL: ABOUT ══ */}
+        {activeTab === "about" && (
+          <section className="pb-20">
+            <div className="grid md:grid-cols-[1fr_260px] gap-12 max-w-4xl">
+              <div>
+                <h2 className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-4">Biography</h2>
+                <div className="text-[15px] leading-[1.75] text-zinc-600 dark:text-zinc-300 space-y-4">
+                  {userChannel.bio ? <p>{userChannel.bio}</p> : <p className="text-zinc-400">This writer hasn&apos;t added a bio yet.</p>}
+                </div>
+
+                {writtenAboutTags.length > 0 && (
+                  <>
+                    <h2 className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mt-10 mb-4">Writes about</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {writtenAboutTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-[13px] font-medium text-zinc-600 dark:text-zinc-300"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <aside>
+                <h2 className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-4">Details</h2>
+                <dl className="space-y-4 text-sm">
+                  {userChannel.createdAt && (
+                    <div className="flex items-center gap-3 text-zinc-500">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="shrink-0">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <path d="M16 2v4M8 2v4M3 10h18" />
+                      </svg>
+                      Joined {fmtDate(userChannel.createdAt)}
+                    </div>
+                  )}
+                  {userChannel.email && (
+                    <div className="flex items-center gap-3 text-zinc-500">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="shrink-0">
+                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                        <path d="m22 7-10 5L2 7" />
+                      </svg>
+                      {userChannel.email}
+                    </div>
+                  )}
+                </dl>
+              </aside>
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   );
-};
-
-export default CuratorProfile;
+}

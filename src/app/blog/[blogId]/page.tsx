@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import axiosInstance from "@/lib/axios";
+import LoadingScreen from "@/components/LoadingScreen";
 import {
   ArrowLeft, Share2, Bookmark, Heart, MessageSquare,
   Edit2, Trash2, Pencil, Eye, EyeOff,
@@ -185,14 +186,7 @@ const SingleBlogPage = () => {
   const fmtN = (n: number) => n > 1000 ? (n / 1000).toFixed(1) + "k" : String(n);
   const readTime = blog ? Math.max(1, Math.ceil((blog.content || "").replace(/<[^>]+>/g, " ").trim().split(/\s+/).filter(Boolean).length / 200)) : 1;
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <svg className="animate-spin text-zinc-900 dark:text-zinc-100" width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
-        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      </svg>
-    </div>
-  );
+  if (loading) return <LoadingScreen status="Fetching story…" />;
 
   if (!blog) return (
     <div className="min-h-screen flex items-center justify-center text-zinc-400 text-sm">

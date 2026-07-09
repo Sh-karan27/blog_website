@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import ProtectedRoute from "@/lib/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import Footer from "./Footer";
+import RouteLoadingOverlay from "./RouteLoadingOverlay";
 
 const AUTH_PATHS = ["/login", "/register"];
 const PROTECTED_PREFIXES = ["/write", "/settings", "/blog/edit"];
@@ -21,6 +22,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <ThemeProvider />
+      <RouteLoadingOverlay />
       <ToastContainer
         position="top-right"
         autoClose={3000}
