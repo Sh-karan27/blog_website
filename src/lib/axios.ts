@@ -23,6 +23,15 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+function logoutAndRedirect() {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  const path = window.location.pathname;
+  if (path !== "/login" && path !== "/register") {
+    window.location.href = "/login";
+  }
+}
+
 // Response interceptor (optional – handle 401, refresh tokens, etc.)
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -37,6 +46,7 @@ axiosInstance.interceptors.response.use(
         const refreshToken = localStorage.getItem("refreshToken");
         if (!refreshToken) {
           console.error("No refresh token available");
+          logoutAndRedirect();
           return Promise.reject(error);
         }
 
@@ -61,10 +71,7 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (err) {
         console.error("Refresh token failed:", err);
-        // Optionally logout user
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        logoutAndRedirect();
       }
     }
 

@@ -78,8 +78,12 @@ function NewsletterForm() {
         placeholder="you@example.com"
         aria-label="Email for newsletter"
         className="flex-1 h-10 px-4 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:border-transparent min-w-0"
+        suppressHydrationWarning
       />
-      <button className="h-10 px-4 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-white transition-colors shrink-0">
+      <button
+        className="h-10 px-4 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-white transition-colors shrink-0"
+        suppressHydrationWarning
+      >
         Join
       </button>
     </div>
