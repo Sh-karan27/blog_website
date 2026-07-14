@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blog Website (Inkwell)
 
-## Getting Started
+Frontend for a full-stack blogging platform, built with Next.js. Talks to the [blog-api](https://github.com/Sh-karan27/blog-api) backend for auth, blogs, comments, likes, bookmarks, playlists, follows, and notifications.
 
-First, run the development server:
+> The frontend UI/UX was redesigned using Claude Code.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Tech Stack
+
+- **Framework:** Next.js 15 (App Router) + React 19, served via a custom Express (`server.js`) + Socket.io server
+- **Styling:** Tailwind CSS + daisyUI
+- **State:** Redux Toolkit / React Redux
+- **Editor:** Tiptap (rich text editing for blog posts)
+- **HTTP:** Axios, with interceptors for JWT access/refresh token handling
+- **Realtime:** Socket.io client
+- **Language:** TypeScript
+
+## Features
+
+- Auth: login / register, protected routes, automatic access-token refresh
+- Home feed, articles listing, individual blog view
+- Blog write & edit (rich text editor with image support)
+- User profile pages, account settings
+- Follow/unfollow, likes, bookmarks
+- Light/dark theme toggle
+- About & contact pages
+
+## Project Structure
+
+```
+src/
+├── app/            # Next.js App Router pages (home, blog, write, profile, login, register, settings, ...)
+├── components/     # Navbar, Footer, forms, theme provider/toggle, loading states
+├── lib/            # axios instance (API client), ProtectedRoute
+├── redux/          # Redux store & slices
+└── utils/          # toast + loading helpers
+server.js           # custom Node server (Express + Socket.io) used for both dev and start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+cp .env.sample .env   # or create .env manually, see below
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Runs at [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+### Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Set this to your deployed `blog-api` URL in production (e.g. Render).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+- `npm run dev` — start dev server (`node server.js`)
+- `npm run build` — production build (`next build`)
+- `npm run start` — start production server (`node server.js`)
+- `npm run lint` — run eslint
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Note on OneDrive
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If this project lives inside a OneDrive-synced folder, delete the `.next` folder if `npm run dev` fails with an `EINVAL: readlink` error — OneDrive's cloud placeholder files can conflict with Next.js's build cache cleanup.
